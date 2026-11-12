@@ -1,0 +1,1193 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3a461c">
+<meta name="description" content="Hocico: ¿lo puede comer mi perro o mi gato? Cuidados, recordatorios y emergencias.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Hocico</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: columna tipo app de celular (máx 520px), banda verde oliva arriba, barra de pestañas fija abajo, botón SOS siempre visible */
+:root{
+  --bg:#f2f3e8; --surface:#fffef8; --surface-2:#e9ebda;
+  --olive:#56662b; --olive-deep:#3a461c; --cream:#f0e3c2;
+  --ink:#262b18; --muted:#666c52; --line:#d9dcc6;
+  --si:#2e7d45; --si-bg:#e1f0e2; --cuidado:#a8700a; --cuidado-bg:#f8ecd0; --no:#b63a28; --no-bg:#f8e0da;
+  --sos:#c2412d; --on-olive:#f7efd8;
+  --f-display:"Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --f-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#171a10; --surface:#22261a; --surface-2:#2c3121;
+  --olive:#a6b86a; --olive-deep:#3d4a1f; --cream:#e2d3ab;
+  --ink:#eceadb; --muted:#a9ad94; --line:#3a402c;
+  --si:#7cc98f; --si-bg:#1f3324; --cuidado:#e5b44d; --cuidado-bg:#3a2f15; --no:#f08a77; --no-bg:#3d201a;
+  --sos:#e0563f; --on-olive:#f7efd8; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#171a10; --surface:#22261a; --surface-2:#2c3121;
+  --olive:#a6b86a; --olive-deep:#3d4a1f; --cream:#e2d3ab;
+  --ink:#eceadb; --muted:#a9ad94; --line:#3a402c;
+  --si:#7cc98f; --si-bg:#1f3324; --cuidado:#e5b44d; --cuidado-bg:#3a2f15; --no:#f08a77; --no-bg:#3d201a;
+  --sos:#e0563f; --on-olive:#f7efd8; color-scheme:dark }
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--olive-deep)}
+.app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);line-height:1.15;text-wrap:balance;margin:0}
+h2{font-size:1.5rem;font-weight:700}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--cuidado);outline-offset:2px}
+
+/* Header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--olive-deep);color:var(--on-olive);padding-block:10px;display:flex;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
+.brand svg{width:40px;height:40px;flex:none}
+.brand b{font-family:var(--f-display);font-size:1.6rem;font-weight:800;letter-spacing:.01em;line-height:1}
+.sos{background:var(--sos);color:#fff;border:0;border-radius:999px;padding:8px 14px;font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.95rem}
+.sos svg{width:18px;height:18px}
+
+main{flex:1;padding-block:18px;display:flex;flex-direction:column;gap:18px}
+.view[hidden]{display:none}
+.stack{display:flex;flex-direction:column;gap:12px}
+
+/* Buscador */
+.hero{display:flex;flex-direction:column;gap:12px}
+.hero h1{font-size:1.9rem;font-weight:800;color:var(--olive)}
+.species{display:flex;gap:8px}
+.chip{border:2px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{border-color:var(--olive);background:var(--olive);color:var(--surface)}
+.search{position:relative}
+.search input{width:100%;border:2px solid var(--olive);background:var(--surface);border-radius:18px;padding:16px 16px 16px 50px;font-size:1.1rem}
+.search svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:22px;height:22px;color:var(--olive)}
+.hint{color:var(--muted);font-size:.9rem}
+.quick{display:flex;flex-wrap:wrap;gap:8px}
+.quick button{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:.92rem}
+
+/* Resultados */
+.results{display:flex;flex-direction:column;gap:10px}
+.food{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.food-head{display:flex;align-items:center;gap:12px;padding:12px 14px;width:100%;background:none;border:0;text-align:left;cursor:pointer}
+.light{width:14px;height:14px;border-radius:50%;flex:none}
+.light.si{background:var(--si)} .light.cuidado{background:var(--cuidado)} .light.no{background:var(--no)}
+.food-name{flex:1;min-width:0;font-weight:600;font-size:1.05rem}
+.food-cat{color:var(--muted);font-size:.82rem;font-weight:500}
+.verdict{font-family:var(--f-display);font-weight:700;font-size:.95rem;padding:2px 10px;border-radius:999px;white-space:nowrap}
+.verdict.si{background:var(--si-bg);color:var(--si)} .verdict.cuidado{background:var(--cuidado-bg);color:var(--cuidado)} .verdict.no{background:var(--no-bg);color:var(--no)}
+.food-body{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}
+.food-body p{max-width:60ch}
+.alert{border-radius:12px;padding:10px 12px;font-size:.93rem;display:flex;gap:8px}
+.alert.pers{background:var(--cuidado-bg);color:var(--ink)}
+.alert.pers b{color:var(--cuidado)}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:2px solid var(--olive);background:var(--olive);color:var(--surface);border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.btn.ghost{background:transparent;color:var(--olive)}
+.btn.small{padding:6px 12px;font-size:.9rem;border-radius:10px}
+.btn.danger{border-color:var(--no);background:transparent;color:var(--no)}
+.empty{background:var(--surface);border:2px dashed var(--line);border-radius:16px;padding:18px;text-align:center;color:var(--muted)}
+
+/* Tarjetas y formularios */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label,.lbl{font-weight:600;font-size:.92rem}
+.field input,.field select{border:1.5px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 12px;width:100%;min-width:0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.checks{display:flex;flex-wrap:wrap;gap:8px}
+.checks label{display:flex;align-items:center;gap:6px;border:1.5px solid var(--line);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:.93rem;background:var(--bg)}
+.pet-head{display:flex;align-items:center;gap:14px}
+.avatar{width:84px;height:84px;border-radius:50%;background:var(--cream);display:grid;place-items:center;overflow:hidden;flex:none;border:3px solid var(--olive)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.avatar svg{width:56px;height:56px}
+.note{font-size:.85rem;color:var(--muted)}
+.saved{color:var(--si);font-weight:600;font-size:.92rem}
+
+/* Recordatorios */
+.dose{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.dose:first-of-type{border-top:0}
+.dose time{font-family:var(--f-display);font-weight:700;font-size:1.25rem;font-variant-numeric:tabular-nums;width:62px;flex:none}
+.dose .what{flex:1;min-width:0}
+.dose.done .what{text-decoration:line-through;color:var(--muted)}
+.tick{width:34px;height:34px;border-radius:50%;border:2px solid var(--olive);background:transparent;cursor:pointer;display:grid;place-items:center;flex:none;color:var(--surface)}
+.dose.done .tick{background:var(--olive)}
+.pill{font-size:.8rem;font-weight:700;padding:2px 10px;border-radius:999px;white-space:nowrap}
+.pill.ok{background:var(--si-bg);color:var(--si)} .pill.soon{background:var(--cuidado-bg);color:var(--cuidado)} .pill.late{background:var(--no-bg);color:var(--no)}
+.med{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)}
+.med:first-child{border-top:0}
+.ctrl{display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.ctrl:first-child{border-top:0}
+
+/* Más */
+.menu{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;text-align:left;cursor:pointer;display:flex;flex-direction:column;gap:8px}
+.tile svg{width:30px;height:30px;color:var(--olive)}
+.tile b{font-family:var(--f-display);font-size:1.05rem}
+.tile span{font-size:.85rem;color:var(--muted)}
+.back{background:none;border:0;color:var(--olive);font-weight:700;cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;align-self:flex-start}
+.plant{display:flex;gap:12px;padding:12px 0;border-top:1px solid var(--line)}
+.plant:first-child{border-top:0}
+.plant .light{margin-top:6px}
+.kcal{font-family:var(--f-display);font-size:2.4rem;font-weight:800;color:var(--olive);line-height:1;font-variant-numeric:tabular-nums}
+.tbl-wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.93rem}
+td,th{padding:8px 6px;border-top:1px solid var(--line);text-align:left}
+th{font-size:.82rem;color:var(--muted);font-weight:600;border-top:0}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+.copy{display:flex;gap:8px;align-items:center;background:var(--bg);border:1.5px solid var(--line);border-radius:12px;padding:8px 8px 8px 12px}
+.copy code{flex:1;min-width:0;font-family:var(--f-body);font-weight:700;user-select:all;overflow-wrap:anywhere}
+
+/* Banner aviso */
+.banner{background:var(--cream);color:#3a3520;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;font-size:.93rem}
+.banner b{font-family:var(--f-display);font-size:1.05rem}
+.proto{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:700;color:var(--cuidado);background:var(--cuidado-bg);padding:3px 10px;border-radius:999px;align-self:flex-start}
+
+/* Barra inferior */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.tabs-in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.tab{background:none;border:0;padding:10px 2px 12px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.74rem;font-weight:600;color:var(--muted);cursor:pointer;text-align:center;line-height:1.15}
+
+/* Lugares */
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface-2);border-radius:14px;padding:4px;gap:4px}
+.seg button{border:0;background:none;border-radius:10px;padding:9px 4px;font-weight:700;cursor:pointer;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--olive);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.subcats{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.subcats .chip{white-space:nowrap;padding:6px 12px;font-size:.9rem}
+.place{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.place.feat{border:2px solid var(--olive)}
+.place-top{display:flex;gap:12px;align-items:flex-start}
+.pico{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:none;font-size:1.4rem}
+.pico.rec{background:var(--si-bg)} .pico.sal{background:var(--no-bg)}
+.place h3{font-size:1.08rem}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{font-size:.8rem;background:var(--surface-2);border-radius:999px;padding:3px 10px}
+.pill.ex{background:var(--surface-2);color:var(--muted)}
+.pill.ft{background:var(--olive);color:var(--surface)}
+
+/* QR */
+.tip{background:var(--olive);color:var(--surface);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.tip-top{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.tip-lbl{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;font-weight:700;opacity:.85}
+.tip p{font-size:1rem;max-width:60ch}
+.tip p b{font-family:var(--f-display);font-size:1.12rem;display:block;margin-bottom:2px}
+.tip .btn{border-color:var(--surface);background:transparent;color:var(--surface)}
+details.faq{border-top:1px solid var(--line);padding:12px 0}
+details.faq:first-child{border-top:0}
+details.faq summary{cursor:pointer;font-weight:700;list-style:none;display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
+details.faq summary::-webkit-details-marker{display:none}
+details.faq summary::after{content:"+";font-family:var(--f-display);font-size:1.3rem;line-height:1;color:var(--olive);flex:none}
+details.faq[open] summary::after{content:"−"}
+details.faq .ans{padding-top:8px;display:flex;flex-direction:column;gap:6px;max-width:62ch}
+.faqsp{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.field textarea{border:1.5px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 12px;width:100%;min-width:0;font:inherit;color:inherit;resize:vertical}
+.code{font-family:var(--f-display);font-weight:800;font-size:1.4rem;letter-spacing:.08em}
+.chip .mini{width:24px;height:24px;border-radius:50%;object-fit:cover;flex:none}
+.petname{font-weight:700;color:var(--olive)}
+.qrbox{display:flex;flex-direction:column;align-items:center;gap:10px;background:#fff;border-radius:16px;padding:16px;color:#262b18}
+.qrbox img{width:220px;max-width:100%;image-rendering:pixelated}
+.qrbox .tagline{font-family:var(--f-display);font-weight:700;font-size:1.1rem;text-align:center}
+.tab svg{width:26px;height:26px}
+.tab[aria-current="page"]{color:var(--olive)}
+.tab[aria-current="page"] svg{transform:translateY(-1px)}
+
+/* Emergencia */
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(15,18,8,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet-in{background:var(--surface);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding-top:18px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.sheet h2{color:var(--sos)}
+.call{display:flex;flex-direction:column;gap:6px;background:var(--bg);border-radius:14px;padding:12px}
+.call .who{font-weight:700}
+ol.say{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
+@media (prefers-reduced-motion:no-preference){.sheet-in{animation:up .22s ease-out}@keyframes up{from{transform:translateY(30px);opacity:.6}}}
+@media (max-width:380px){.grid2{grid-template-columns:1fr}.hero h1{font-size:1.6rem}}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="logo" viewBox="0 0 64 64">
+      <rect width="64" height="64" rx="16" fill="#56662b"/>
+      <path d="M12 38c0-10 9-18 20-18s20 8 20 18c0 8-8 13-20 13S12 46 12 38z" fill="#f0e3c2"/>
+      <path d="M32 40.5c-.4-.4-7-4.6-7-8.6 0-2.3 1.7-3.9 3.7-3.9 1.4 0 2.6.8 3.3 1.9.7-1.1 1.9-1.9 3.3-1.9 2 0 3.7 1.6 3.7 3.9 0 4-6.6 8.2-7 8.6z" fill="#3a461c"/>
+      <path d="M32 40.5v3.2M32 43.7c-1.6 2.2-4.4 2.4-6 .8M32 43.7c1.6 2.2 4.4 2.4 6 .8" stroke="#3a461c" stroke-width="2" fill="none" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <header class="top gut">
+    <div class="brand">
+      <svg aria-hidden="true"><use href="#logo"/></svg>
+      <b>Hocico</b>
+    </div>
+    <button class="sos" id="sosBtn" type="button" aria-label="Emergencia">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>
+      Emergencia
+    </button>
+  </header>
+
+  <main class="gut">
+    <!-- INICIO -->
+    <section class="view" id="v-inicio">
+      <div class="stack">
+        <div class="banner" id="legalBanner" hidden>
+          <b>Antes de empezar</b>
+          <p>Hocico da información orientativa basada en fuentes veterinarias. No reemplaza la consulta con tu veterinario. Ante la duda, no se lo des y consultá.</p>
+          <button class="btn small" id="legalOk" type="button">Entendido</button>
+        </div>
+        <div class="hero">
+          <h1 id="heroTitle">¿Qué quiere comer tu mascota?</h1>
+          <div class="species" role="group" aria-label="Especie">
+            <button class="chip" type="button" data-sp="perro" aria-pressed="true">🐶 Perro</button>
+            <button class="chip" type="button" data-sp="gato" aria-pressed="false">🐱 Gato</button>
+          </div>
+          <div class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+            <input id="q" type="search" placeholder="Ej: pastel de papa, uvas, zapallo" autocomplete="off" aria-label="Buscar comida">
+          </div>
+          <p class="hint">Escribí aunque sea con faltas: "sandia", "chocolat" o "milaneza" también funcionan.</p>
+          <div class="quick" id="quick"></div>
+        </div>
+        <div class="tip" id="tip" aria-live="polite"></div>
+        <div class="results" id="results" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- MASCOTA -->
+    <section class="view" id="v-mascota" hidden>
+      <div class="stack">
+        <h2>Mi mascota</h2>
+        <p class="note">Opcional. Cargá todas tus mascotas: las respuestas se ajustan a cada una según su peso, edad y salud. Todo queda guardado en este celular, salvo lo que elijas compartir.</p>
+        <div class="subcats" id="petBar" role="group" aria-label="Mis mascotas"></div>
+        <form class="card" id="petForm">
+          <div class="pet-head">
+            <div class="avatar" id="avatar"></div>
+            <div class="stack" style="gap:6px;min-width:0">
+              <label class="btn small ghost" for="photo" style="cursor:pointer">Elegir foto</label>
+              <input id="photo" type="file" accept="image/*" hidden>
+              <span class="note">Se achica y se guarda en el celular.</span>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="field"><label for="pName">Nombre</label><input id="pName" placeholder="Ej: Luna"></div>
+            <div class="field"><label for="pSp">Especie</label><select id="pSp"><option value="perro">Perro</option><option value="gato">Gato</option></select></div>
+            <div class="field" style="grid-column:1/-1"><label for="pBreed">Raza</label><input id="pBreed" placeholder="Ej: Pitbull o Mestizo"></div>
+            <div class="field"><label for="pW">Peso (kg)</label><input id="pW" type="number" inputmode="decimal" min="0.3" max="100" step="0.1" placeholder="Ej: 22"></div>
+            <div class="field"><label for="pAge">Edad (años)</label><input id="pAge" type="number" inputmode="decimal" min="0" max="30" step="0.5" placeholder="Ej: 4"></div>
+            <div class="field"><label for="pSex">Sexo</label><select id="pSex"><option value="">Elegir</option><option value="macho">Macho</option><option value="hembra">Hembra</option></select></div>
+            <div class="field"><label for="pNeut">Castrado/a</label><select id="pNeut"><option value="si">Sí</option><option value="no">No</option><option value="ns">No sé</option></select></div>
+          </div>
+          <div class="field">
+            <span class="lbl">Condiciones de salud</span>
+            <div class="checks" id="conds">
+              <label><input type="checkbox" value="diabetes"> Diabetes</label>
+              <label><input type="checkbox" value="sobrepeso"> Sobrepeso</label>
+              <label><input type="checkbox" value="renal"> Problema renal</label>
+              <label><input type="checkbox" value="pancreatitis"> Pancreatitis</label>
+              <label><input type="checkbox" value="estomago"> Estómago sensible</label>
+              <label><input type="checkbox" value="alergias"> Alergias</label>
+            </div>
+          </div>
+          <h3 style="margin-top:6px">Veterinario y obra social</h3>
+          <div class="grid2">
+            <div class="field"><label for="vName">Mi veterinaria</label><input id="vName" placeholder="Nombre"></div>
+            <div class="field"><label for="vTel">Teléfono</label><input id="vTel" type="tel" placeholder="261 ..."></div>
+            <div class="field"><label for="gName">Guardia 24 h</label><input id="gName" placeholder="Nombre"></div>
+            <div class="field"><label for="gTel">Teléfono</label><input id="gTel" type="tel" placeholder="261 ..."></div>
+            <div class="field"><label for="oName">Obra social</label><input id="oName" placeholder="Ej: Petit, Medipet"></div>
+            <div class="field"><label for="oNum">N.º de afiliado</label><input id="oNum"></div>
+            <div class="field"><label for="oTel">Tel. urgencias obra social</label><input id="oTel" type="tel"></div>
+          </div>
+          <h3 style="margin-top:6px">Contactos si se pierde</h3>
+          <p class="note">Todas las personas que la cuidan. Aparecen en el QR del collar.</p>
+          <div class="stack" id="contacts" style="gap:10px"></div>
+          <button class="btn small ghost" type="button" id="addContact" style="align-self:flex-start">+ Agregar contacto</button>
+          <div class="row-actions" style="align-items:center">
+            <button class="btn" type="submit">Guardar</button>
+            <button class="btn small danger" type="button" id="delPet" hidden>Quitar esta mascota</button>
+            <span class="saved" id="savedMsg" hidden>Guardado</span>
+          </div>
+        </form>
+        <div class="card" id="qrCard">
+          <h3>Mascota perdida: QR para el collar</h3>
+          <p class="note">Generá un código con el nombre de tu mascota y tu teléfono. Si alguien la encuentra, lo escanea con la cámara del celular y ve cómo contactarte. No necesita internet ni tener la app.</p>
+          <button class="btn" type="button" id="qrGen" style="align-self:flex-start">Generar QR</button>
+          <p class="note" id="qrMsg" hidden></p>
+          <div id="qrOut" hidden></div>
+        </div>
+        <div class="card" id="shareCard">
+          <h3>Cuidado compartido</h3>
+          <p class="note">Si tu mascota pasa días en otra casa, compartila: los dos celulares ven la misma medicación, sus vacunas y quién dio cada toma.</p>
+          <div class="field"><label for="meName">Tu nombre en este celular</label><input id="meName" placeholder="Ej: Tony" autocomplete="name"></div>
+          <div id="shareBody" class="stack" style="gap:10px"></div>
+          <p class="note" id="shareMsg" hidden></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- LUGARES -->
+    <section class="view" id="v-lugares" hidden>
+      <div class="stack">
+        <h2>Lugares pet friendly</h2>
+        <span class="proto">Muy pronto: lugares reales de Mendoza</span>
+        <div class="seg" role="group" aria-label="Tipo de lugar">
+          <button type="button" data-grp="todos" aria-pressed="true">Todos</button>
+          <button type="button" data-grp="rec" aria-pressed="false">Recreativo</button>
+          <button type="button" data-grp="sal" aria-pressed="false">Salud</button>
+        </div>
+        <div class="subcats" id="subcats"></div>
+        <div class="stack" id="placeList" style="gap:10px"></div>
+        <div class="banner">
+          <b>¿Tenés un local que acepta mascotas?</b>
+          <p>Cafés, parques, hospedajes, veterinarias, peluquerías u obras sociales: sumate a Hocico.</p>
+          <button class="btn small" type="button" id="goNeg" style="align-self:flex-start">Quiero sumar mi local</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RECORDATORIOS -->
+    <section class="view" id="v-recordatorios" hidden>
+      <div class="stack">
+        <h2>Recordatorios</h2>
+        <div class="card">
+          <h3>Hoy</h3>
+          <div id="today"></div>
+          <div id="shareWrap" hidden style="display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:12px">
+            <a class="btn small ghost" id="shareDay" href="#" target="_blank" rel="noopener" style="text-decoration:none;align-self:flex-start">Avisar por WhatsApp cómo van las tomas</a>
+            <span class="note">Ideal si tu mascota pasa días en otra casa: la otra persona sabe qué se dio y qué falta.</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Medicación</h3>
+          <div id="medList"></div>
+          <form class="stack" id="medForm" style="gap:10px;border-top:1px solid var(--line);padding-top:12px">
+            <span class="lbl">Agregar medicación</span>
+            <div class="field" id="mPetWrap"><label for="mPet">Para</label><select id="mPet"></select></div>
+            <div class="grid2">
+              <div class="field"><label for="mName">Remedio</label><input id="mName" placeholder="Ej: pastilla artrosis" required></div>
+              <div class="field"><label for="mDose">Dosis</label><input id="mDose" placeholder="Ej: 1 pastilla"></div>
+            </div>
+            <div class="field"><label for="mTimes">Horarios (separados por coma)</label><input id="mTimes" placeholder="Ej: 08:00, 14:00, 20:00, 23:00" required></div>
+            <button class="btn small" type="submit" style="align-self:flex-start">Agregar</button>
+          </form>
+        </div>
+        <div class="card">
+          <h3>Vacunas y parásitos</h3>
+          <p class="note">Poné la fecha de la última vez y la app te dice cuándo toca la próxima. Los intervalos son de referencia: usá los que te indique tu veterinario.</p>
+          <div id="ctrlList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÁS -->
+    <section class="view" id="v-mas" hidden>
+      <div class="stack" id="masMenu">
+        <h2>Más</h2>
+        <div class="menu">
+          <button class="tile" type="button" data-sub="faq" style="grid-column:1/-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4.5M12 17.5h.01"/></svg>
+            <b>Preguntas frecuentes</b><span>Castración, vacunas, comportamiento, baño y cuándo es urgencia</span>
+          </button>
+          <button class="tile" type="button" data-sub="opinion" style="grid-column:1/-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M8.5 10.5h7M8.5 13.5h4"/></svg>
+            <b>Dar mi opinión</b><span>Contanos qué te gustó y qué le falta a Hocico</span>
+          </button>
+          <button class="tile" type="button" data-sub="plantas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9M12 12C12 7 8 4 4 4c0 5 3 8 8 8zM12 14c0-4 3-7 8-7 0 4-3 7-8 7z"/></svg>
+            <b>Plantas y objetos tóxicos</b><span>Lo que hay en casa</span>
+          </button>
+          <button class="tile" type="button" data-sub="porciones">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18a9 9 0 0 1-18 0zM8 7c0-1.5 1-2 1-3M12 7c0-1.5 1-2 1-3M16 7c0-1.5 1-2 1-3"/></svg>
+            <b>Calculadora de porciones</b><span>Cuánto extra por día</span>
+          </button>
+          <button class="tile" type="button" data-sub="favoritos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>
+            <b>Favoritos</b><span>Tus comidas guardadas</span>
+          </button>
+          <button class="tile" type="button" data-sub="aviso">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M12 9v4M12 16h.01"/></svg>
+            <b>Aviso legal</b><span>Cómo usar la información</span>
+          </button>
+          <button class="tile" type="button" data-sub="negocios" style="grid-column:1/-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16l-1-5H5zM5 10v9h14v-9M10 19v-5h4v5"/></svg>
+            <b>¿Tenés un local pet friendly?</b><span>Veterinarias, cafés, tiendas y obras sociales: sumate a Hocico</span>
+          </button>
+        </div>
+      </div>
+      <div class="stack" id="masSub" hidden></div>
+    </section>
+  </main>
+
+  <nav class="tabs" aria-label="Secciones">
+    <div class="tabs-in">
+      <button class="tab" type="button" data-tab="inicio" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>Comidas
+      </button>
+      <button class="tab" type="button" data-tab="mascota">
+        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="6" cy="10" r="2.2"/><circle cx="10" cy="5.8" r="2.2"/><circle cx="14.5" cy="5.8" r="2.2"/><circle cx="18.5" cy="10" r="2.2"/><path d="M12.2 11c3 0 6 4.4 6 6.6 0 2-1.6 2.6-3 2.4-1.2-.2-2-.8-3-.8s-1.8.6-3 .8c-1.4.2-3-.4-3-2.4 0-2.2 3-6.6 6-6.6z"/></svg>Mi mascota
+      </button>
+      <button class="tab" type="button" data-tab="recordatorios">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8M10 20a2 2 0 0 0 4 0"/></svg>Recordatorios
+      </button>
+      <button class="tab" type="button" data-tab="lugares">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Lugares
+      </button>
+      <button class="tab" type="button" data-tab="mas">
+        <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>Más
+      </button>
+    </div>
+  </nav>
+</div>
+
+<div class="sheet" id="sheet" hidden>
+  <div class="sheet-in gut" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <h2 id="sheetTitle">Emergencia</h2>
+    <p>Si comió algo peligroso, llamá ya. No esperes a que aparezcan síntomas: algunos tardan horas.</p>
+    <div id="calls" class="stack" style="gap:10px"></div>
+    <div class="card" style="gap:8px">
+      <h3>Qué decirle al veterinario</h3>
+      <ol class="say">
+        <li>Qué comió (si tenés el envase, tenelo a mano).</li>
+        <li>Cuánto comió, más o menos.</li>
+        <li>A qué hora fue.</li>
+        <li>Peso y edad de tu mascota.</li>
+        <li>Qué síntomas ves (vómitos, temblores, decaimiento).</li>
+      </ol>
+      <p class="note"><b>No le hagas vomitar ni le des leche o aceite</b> si el veterinario no te lo indica: en algunos casos empeora las cosas.</p>
+    </div>
+    <button class="btn" type="button" id="sheetClose">Cerrar</button>
+  </div>
+</div>
+
+<script src="qrcode.min.js"></script>
+<script>
+/* ===== CONTENIDO DE PRUEBA (a revisar por veterinario) =====
+   s: si | cuidado | no   — sugar/fat: para personalizar según el perfil */
+const FOODS = [
+ {n:"Uvas y pasas de uva",a:"uva pasa pasas",c:"Frutas",perro:["no","Pueden causar falla renal aguda, incluso con muy pocas. No se sabe por qué a algunos perros les hace daño y a otros no, y no hay forma de saberlo antes. Mejor ninguna."],gato:["no","Hay reportes de daño renal también en gatos. No se las des."]},
+ {n:"Chocolate",a:"cacao chocolatada bombon alfajor",c:"Dulces",perro:["no","Tiene teobromina, que los perros no pueden eliminar. Cuanto más oscuro o amargo, más peligroso. Puede causar vómitos, temblores y problemas de corazón."],gato:["no","Tóxico igual que en perros por la teobromina y la cafeína."]},
+ {n:"Cebolla",a:"cebolla de verdeo puerro",c:"Verduras",perro:["no","Cruda, cocida o en polvo daña los glóbulos rojos y puede causar anemia. El daño se acumula, así que tampoco conviene \"un poquito seguido\"."],gato:["no","Los gatos son todavía más sensibles que los perros. Ojo con salsas, caldos y rellenos que la lleven."]},
+ {n:"Ajo",a:"ajo en polvo",c:"Verduras",perro:["no","Pertenece a la misma familia que la cebolla y daña los glóbulos rojos."],gato:["no","Muy tóxico para gatos, incluso en polvo o en salsas."]},
+ {n:"Palta",a:"aguacate palta",c:"Frutas",perro:["cuidado","La pulpa en poca cantidad no suele ser grave, pero es muy grasosa y puede dar pancreatitis. El carozo puede trabar el intestino. Mejor evitarla."],gato:["cuidado","Muy grasosa y no les aporta nada. Mejor evitarla."],fat:1},
+ {n:"Chicles y golosinas sin azúcar",a:"xilitol xylitol chicle caramelo sin azucar",c:"Dulces",perro:["no","El xilitol (endulzante) baja el azúcar en sangre en minutos y puede dañar el hígado. Es una emergencia: llamá al veterinario."],gato:["no","No se lo des. Ante la duda, tratalo como emergencia."]},
+ {n:"Mate, café y té",a:"yerba mate cafe te cafeina",c:"Bebidas",perro:["no","La cafeína y la mateína aceleran el corazón y pueden causar temblores. Ojo con la yerba usada del mate."],gato:["no","Igual que en perros: la cafeína es tóxica."]},
+ {n:"Alcohol",a:"vino cerveza fernet bebida alcoholica",c:"Bebidas",perro:["no","Aun en poca cantidad puede causar intoxicación grave."],gato:["no","Muy peligroso, incluso unos sorbos."]},
+ {n:"Nueces de macadamia",a:"macadamia nuez frutos secos",c:"Otros",perro:["no","Causan debilidad en las patas traseras, vómitos y fiebre."],gato:["no","No se las des."]},
+ {n:"Masa cruda con levadura",a:"masa cruda pan crudo pizza cruda",c:"Otros",perro:["no","Se infla en el estómago y produce alcohol al fermentar."],gato:["no","Mismo riesgo que en perros."]},
+ {n:"Huesos cocidos",a:"hueso asado hueso pollo costilla",c:"Carnes",perro:["no","Los huesos cocidos se astillan y pueden lastimar la boca, trabarse o perforar el intestino. Ojo con los huesos del asado."],gato:["no","Se astillan igual. No se los des."]},
+ {n:"Dulce de leche",a:"dulce de leche alfajor",c:"Dulces",perro:["no","Mucho azúcar y lácteo. Puede dar diarrea y a la larga engorda y daña los dientes."],gato:["no","Azúcar y lactosa: le hace mal a la panza."],sugar:1},
+ {n:"Leche",a:"leche vaca",c:"Lácteos",perro:["cuidado","Muchos perros adultos no digieren bien la lactosa y les da diarrea. Si le das, que sea muy poca."],gato:["cuidado","Es un mito que los gatos deben tomar leche: la mayoría de los adultos no digieren la lactosa. Mejor agua fresca."]},
+ {n:"Queso",a:"queso cremoso queso rallado",c:"Lácteos",perro:["cuidado","Unos trocitos de queso magro como premio está bien. Evitá los muy salados o grasosos."],gato:["cuidado","Algún trocito chico de vez en cuando. No como costumbre."],fat:1},
+ {n:"Pastel de papa",a:"pastel papa pure carne picada",c:"Comidas caseras",perro:["cuidado","La papa cocida y la carne están bien, pero el relleno casi siempre lleva cebolla, ajo, sal y condimentos, que le hacen mal. Si tiene cebolla, no se lo des. Si lo hiciste sin cebolla ni sal, un poquito sí."],gato:["no","El relleno suele llevar cebolla, y los gatos son muy sensibles. Mejor no."],fat:1},
+ {n:"Empanadas",a:"empanada carne empanadas mendocinas",c:"Comidas caseras",perro:["no","El relleno lleva cebolla y condimentos, y la masa es muy grasosa."],gato:["no","Cebolla en el relleno: no."],fat:1},
+ {n:"Milanesa",a:"milanesa milanga rebozado",c:"Comidas caseras",perro:["no","El rebozado suele llevar ajo y perejil, y la fritura es muy grasosa. Un pedacito de carne hervida sola es mejor opción."],gato:["no","Ajo en el rebozado y grasa de la fritura: no."],fat:1},
+ {n:"Asado (carne)",a:"asado carne asada vacio chorizo morcilla",c:"Carnes",perro:["cuidado","Un pedacito de carne magra sin sal ni chimichurri está bien. La grasa puede dar pancreatitis, el chorizo y la morcilla son muy grasos y salados, y los huesos cocidos nunca."],gato:["cuidado","Un trocito de carne magra sin sal. Nada de grasa ni embutidos."],fat:1},
+ {n:"Pollo hervido",a:"pollo pechuga pollo cocido",c:"Carnes",perro:["si","Sin piel, sin huesos y sin condimentos es una muy buena proteína. Junto con arroz blanco es la dieta típica cuando anda mal de la panza."],gato:["si","Sin piel, sin huesos y sin condimentos, le encanta y le hace bien."]},
+ {n:"Carne vacuna cocida",a:"carne picada carne hervida bife",c:"Carnes",perro:["si","Cocida, magra y sin sal ni condimentos está muy bien."],gato:["si","Cocida y sin condimentos, es buena proteína."]},
+ {n:"Arroz blanco cocido",a:"arroz",c:"Comidas caseras",perro:["si","No es malo: muchos veterinarios lo indican con pollo cuando hay diarrea. Lo que no conviene es que sea la base de su comida todos los días."],gato:["cuidado","No es tóxico pero casi no le aporta. Solo ocasional."]},
+ {n:"Fideos cocidos",a:"fideos pasta tallarines",c:"Comidas caseras",perro:["cuidado","Solos y sin salsa no son tóxicos, pero son calorías vacías. Ojo con la salsa: suele tener cebolla y ajo."],gato:["cuidado","Sin salsa, algún fideo no hace daño, pero no aporta."]},
+ {n:"Huevo cocido",a:"huevo duro huevo revuelto",c:"Carnes",perro:["si","Cocido es buena proteína. Crudo no conviene."],gato:["si","Cocido está bien, de vez en cuando."]},
+ {n:"Zanahoria",a:"zanahoria",c:"Verduras",perro:["si","Cruda o cocida, es un buen premio bajo en calorías y ayuda a limpiar los dientes."],gato:["cuidado","Cocida y en poca cantidad. A la mayoría no le interesa."]},
+ {n:"Zapallo cocido",a:"zapallo calabaza anco",c:"Verduras",perro:["si","Cocido, sin sal ni manteca, tiene fibra y ayuda al tránsito intestinal. Se puede mezclar con su comida de vez en cuando."],gato:["si","Un poquito cocido ayuda con el tránsito y las bolas de pelo."]},
+ {n:"Manzana",a:"manzana",c:"Frutas",perro:["si","Sin semillas ni corazón, en trocitos. Las semillas tienen compuestos que no le hacen bien."],gato:["cuidado","Un trocito sin semillas puede estar bien, pero no la necesita."],sugar:1},
+ {n:"Banana",a:"banana platano",c:"Frutas",perro:["cuidado","Segura, pero tiene mucho azúcar. Unas rodajitas como premio."],gato:["cuidado","No es tóxica, pero tiene mucho azúcar. Muy poquito."],sugar:1},
+ {n:"Naranja y mandarina",a:"naranja mandarina citricos limon pomelo",c:"Frutas",perro:["cuidado","Algún gajo sin cáscara ni semillas está bien. Mucha cantidad le puede revolver el estómago por el ácido y el azúcar."],gato:["no","Los cítricos les irritan y a casi ningún gato le gustan. No se los des."],sugar:1},
+ {n:"Sandía",a:"sandia",c:"Frutas",perro:["si","Sin semillas ni cáscara, ideal para el verano. Es casi todo agua."],gato:["cuidado","Un trocito sin semillas, si le interesa."],sugar:1},
+ {n:"Arándanos",a:"arandanos",c:"Frutas",perro:["si","Un buen premio chiquito y bajo en calorías."],gato:["cuidado","Algunos sueltos están bien."]},
+ {n:"Frutillas",a:"frutilla fresa",c:"Frutas",perro:["si","Pocas, lavadas y en trocitos."],gato:["cuidado","Un pedacito, si quiere."],sugar:1},
+ {n:"Pepino",a:"pepino",c:"Verduras",perro:["si","Fresco, bajo en calorías y lleno de agua."],gato:["cuidado","Un trocito no hace daño."]},
+ {n:"Tomate",a:"tomate",c:"Verduras",perro:["cuidado","El tomate maduro en poca cantidad está bien. La planta y el tomate verde son tóxicos."],gato:["cuidado","Maduro y muy poco. La planta es tóxica."]},
+ {n:"Papa",a:"papa pure papas fritas",c:"Verduras",perro:["cuidado","Cocida y sin sal, en poca cantidad, está bien. Cruda o verde no. Las papas fritas tampoco: sal y grasa."],gato:["cuidado","Cocida y muy poca. Cruda no."]},
+ {n:"Choclo",a:"choclo maiz",c:"Verduras",perro:["cuidado","Los granos cocidos están bien. El marlo nunca: puede trabarse en el intestino."],gato:["cuidado","Algunos granos cocidos. El marlo no."]},
+ {n:"Atún en lata",a:"atun lata",c:"Carnes",perro:["cuidado","Al natural y de vez en cuando. Evitá el que viene en aceite o con mucha sal."],gato:["cuidado","Les encanta, pero no debe ser su comida de todos los días: le faltan nutrientes y tiene mercurio. Ocasional y al natural."]},
+ {n:"Pescado crudo",a:"pescado crudo sushi",c:"Carnes",perro:["no","Puede tener parásitos y bacterias. Cocido y sin espinas sí."],gato:["no","Además de parásitos, crudo destruye una vitamina que los gatos necesitan. Cocido y sin espinas sí."]},
+ {n:"Caldo de hueso casero",a:"caldo hueso caldo",c:"Comidas caseras",perro:["cuidado","Está bien si lo hacés sin cebolla, sin ajo y sin sal, y colás bien los huesos. El caldo en cubitos no: tiene mucha sal y cebolla."],gato:["cuidado","Casero, sin cebolla, ajo ni sal, y bien colado. Nunca de cubitos."]},
+ {n:"Hígado cocido",a:"higado",c:"Carnes",perro:["cuidado","Nutritivo, pero tiene mucha vitamina A. Un poquito de vez en cuando."],gato:["cuidado","Poquito y no seguido, por el exceso de vitamina A."]},
+ {n:"Pan",a:"pan miga tostada",c:"Otros",perro:["cuidado","Un pedacito de pan común no hace daño, pero no aporta nada. Ojo con pan con pasas, ajo o semillas."],gato:["cuidado","Un pedacito no hace daño, pero no lo necesita."]},
+ {n:"Helado",a:"helado",c:"Dulces",perro:["no","Azúcar, lactosa y a veces chocolate o xilitol. Mejor no."],gato:["no","Azúcar y lactosa: no."],sugar:1},
+ {n:"Maní sin sal",a:"mani mantequilla de mani pasta de mani",c:"Otros",perro:["cuidado","El maní sin sal en poca cantidad está bien. Si es pasta de maní, revisá que no tenga xilitol."],gato:["cuidado","Muy poquito, si le interesa. Es grasoso."],fat:1},
+ {n:"Yogur natural",a:"yogur yogurt",c:"Lácteos",perro:["cuidado","Natural y sin azúcar, una cucharadita puede estar bien. Nunca con edulcorante."],gato:["cuidado","Una cucharadita natural sin azúcar, de vez en cuando."]},
+ {n:"Galletitas dulces",a:"galletitas galletas bizcochos facturas medialunas",c:"Dulces",perro:["no","Azúcar, grasa y a veces chocolate o pasas. Usá premios para perros."],gato:["no","No le aportan y le hacen mal."],sugar:1,fat:1},
+ {n:"Pizza",a:"pizza fugazza",c:"Comidas caseras",perro:["no","La salsa y la fugazza tienen cebolla y ajo, y es muy grasosa y salada."],gato:["no","Cebolla, ajo y grasa: no."],fat:1},
+/* --- Grasas, aderezos y condimentos --- */
+ {n:"Manteca",a:"manteca mantequilla margarina",c:"Grasas y aderezos",perro:["no","No es tóxica, pero es pura grasa: puede darle diarrea y, en cantidad, pancreatitis. Si lamió un poquito no pasa nada, pero no se la des."],gato:["no","Pura grasa y lácteo: le cae mal a la panza. No se la des."],fat:1},
+ {n:"Grasa de la carne y piel de pollo",a:"grasa gordura piel de pollo pellejo cuero tocino panceta grasita",c:"Grasas y aderezos",perro:["no","Es de lo que más pancreatitis causa, sobre todo después de un asado. Mejor tirarla a la basura y no al plato del perro."],gato:["no","Muy grasosa: le puede dar vómitos, diarrea o pancreatitis."],fat:1},
+ {n:"Aceite",a:"aceite oliva girasol",c:"Grasas y aderezos",perro:["cuidado","Un chorrito en la comida no es tóxico, pero mucha cantidad da diarrea y suma calorías. No lo agregues por costumbre si no te lo indicó el veterinario."],gato:["cuidado","Muy poca cantidad no hace daño, pero no lo necesita."],fat:1},
+ {n:"Mayonesa",a:"mayonesa salsa golf",c:"Grasas y aderezos",perro:["no","Grasa, huevo crudo y a veces ajo o limón. Una lamida no es grave, pero no se la des."],gato:["no","Muy grasosa. No."],fat:1},
+ {n:"Ketchup y salsas",a:"ketchup salsa de tomate tuco salsa barbacoa",c:"Grasas y aderezos",perro:["no","Casi todas llevan cebolla, ajo, sal y azúcar. El tuco casero también suele tener cebolla."],gato:["no","Cebolla y ajo en casi todas: no."],sugar:1},
+ {n:"Mostaza",a:"mostaza",c:"Grasas y aderezos",perro:["no","Las semillas de mostaza irritan el estómago y pueden dar vómitos."],gato:["no","Irrita el estómago. No."]},
+ {n:"Chimichurri",a:"chimichurri salsa criolla",c:"Grasas y aderezos",perro:["no","Lleva ajo, cebolla o ambos, además de aceite y sal. Nada de carne con chimichurri."],gato:["no","Ajo y cebolla: no."]},
+ {n:"Sal y comida salada",a:"sal salado",c:"Grasas y aderezos",perro:["no","Mucha sal les da mucha sed y, en cantidad, puede intoxicarlos. Su comida no necesita sal agregada."],gato:["no","Son muy sensibles a la sal. No le agregues."]},
+ {n:"Azúcar",a:"azucar",c:"Grasas y aderezos",perro:["no","No es tóxica, pero engorda, daña los dientes y a la larga puede llevar a diabetes."],gato:["no","Los gatos no la necesitan para nada."],sugar:1},
+ {n:"Edulcorante",a:"edulcorante endulzante stevia sacarina sucralosa xilitol",c:"Grasas y aderezos",perro:["no","Algunos edulcorantes llevan xilitol, que es muy peligroso: baja el azúcar en sangre en minutos. Si comió algo con xilitol, es emergencia."],gato:["no","No se lo des. Ante la duda, consultá."]},
+ {n:"Picante, ají y pimienta",a:"picante aji pimienta pimenton merken aji molido",c:"Grasas y aderezos",perro:["no","Irritan la boca y el estómago. Pueden dar vómitos y diarrea."],gato:["no","Irritan mucho. No."]},
+ {n:"Canela",a:"canela",c:"Grasas y aderezos",perro:["cuidado","Una pizca no es tóxica, pero en cantidad o en polvo inhalado irrita. No hace falta dársela."],gato:["no","Los gatos la toleran peor. Mejor no."]},
+ {n:"Nuez moscada",a:"nuez moscada",c:"Grasas y aderezos",perro:["no","Tiene una sustancia que puede causar temblores y convulsiones. Ojo con tortas y purés que la lleven."],gato:["no","Tóxica. No."]},
+/* --- Fiambres, embutidos y achuras --- */
+ {n:"Jamón y fiambres",a:"jamon fiambre salame mortadela bondiola leberwurst picada",c:"Carnes",perro:["no","Mucha sal, grasa y condimentos (a veces ajo). Un pedacito no es una emergencia, pero no como premio."],gato:["no","Mucha sal y grasa: no."],fat:1},
+ {n:"Salchichas y panchos",a:"salchicha pancho vienesa hot dog",c:"Carnes",perro:["no","Sal, grasa y condimentos. Además, enteras se pueden atragantar."],gato:["no","Muy saladas y grasosas."],fat:1},
+ {n:"Chorizo y morcilla",a:"chorizo morcilla choripan longaniza",c:"Carnes",perro:["no","Muy grasos, salados y con condimentos. Después del asado son de lo que más pancreatitis da."],gato:["no","Grasa, sal y ajo: no."],fat:1},
+ {n:"Achuras",a:"achuras molleja chinchulin rinon riñon mondongo tripa",c:"Carnes",perro:["no","Las del asado son muy grasosas y saladas. Si querés darle vísceras, que sea poquito, hervido y sin sal, y consultalo antes."],gato:["no","Las del asado no: grasa y sal."],fat:1},
+ {n:"Hamburguesa",a:"hamburguesa medallon patty",c:"Carnes",perro:["cuidado","Una casera de carne sola, cocida y sin sal ni cebolla, sí. Las industriales y las de comida rápida suelen tener cebolla, ajo y mucha sal: no."],gato:["cuidado","Solo carne cocida sin condimentos. Las industriales, no."],fat:1},
+ {n:"Cerdo cocido",a:"cerdo chancho carre lomo de cerdo",c:"Carnes",perro:["cuidado","Bien cocido, magro y sin condimentos, un poco está bien. Crudo no, y la grasa del cerdo tampoco."],gato:["cuidado","Bien cocido y magro, poquito."],fat:1},
+ {n:"Carne cruda",a:"carne cruda dieta barf",c:"Carnes",perro:["cuidado","Puede traer bacterias como salmonela y parásitos, para el perro y para la familia. Si querés darle una dieta cruda, hacelo solo con guía de tu veterinario."],gato:["cuidado","Mismo riesgo de bacterias y parásitos. Solo con guía veterinaria."]},
+ {n:"Pollo crudo",a:"pollo crudo",c:"Carnes",perro:["cuidado","Riesgo alto de salmonela. Mejor siempre cocido, sin piel y sin huesos."],gato:["cuidado","Mejor cocido. Crudo puede traer bacterias."]},
+ {n:"Huevo crudo",a:"huevo crudo clara cruda",c:"Carnes",perro:["cuidado","Puede traer salmonela y la clara cruda le quita una vitamina. Mejor cocido."],gato:["cuidado","Mejor cocido."]},
+ {n:"Pescado cocido",a:"pescado merluza filet pescado al horno salmon trucha",c:"Carnes",perro:["si","Cocido, sin espinas y sin condimentos es una buena proteína. Ojo con las espinas: revísalo bien."],gato:["si","Cocido y sin espinas le encanta. De vez en cuando, no como única comida."]},
+ {n:"Sardinas",a:"sardina caballa",c:"Carnes",perro:["cuidado","Las de lata al agua y sin sal, alguna de vez en cuando. En aceite o en salsa, no."],gato:["cuidado","Al agua y de vez en cuando. No como base de su comida."]},
+ {n:"Mariscos",a:"mariscos camarones langostinos calamar rabas mejillones",c:"Carnes",perro:["cuidado","Bien cocidos, sin cáscara y sin condimentos, un poquito puede estar bien. Las rabas fritas no. Algunos perros son alérgicos."],gato:["cuidado","Cocidos y sin condimentos, muy poquito. Crudos nunca."]},
+/* --- Verduras --- */
+ {n:"Batata cocida",a:"batata camote",c:"Verduras",perro:["si","Cocida y sin azúcar ni manteca tiene fibra y le gusta. Con moderación porque tiene bastante azúcar natural."],gato:["cuidado","Un poquito cocida no hace daño."],sugar:1},
+ {n:"Zapallito y zucchini",a:"zapallito zucchini calabacin",c:"Verduras",perro:["si","Crudo o cocido, bajo en calorías. Buena opción para mezclar con su comida."],gato:["cuidado","Cocido y poquito, si le interesa."]},
+ {n:"Arvejas",a:"arvejas guisantes",c:"Verduras",perro:["si","Frescas o congeladas, cocidas. Las de lata suelen tener mucha sal."],gato:["cuidado","Algunas cocidas están bien."]},
+ {n:"Chauchas",a:"chauchas judias verdes ejotes",c:"Verduras",perro:["si","Cocidas y sin sal, un premio bajo en calorías. Muy usadas para perros con sobrepeso."],gato:["cuidado","Cocidas y poquitas."]},
+ {n:"Lechuga",a:"lechuga rucula ensalada",c:"Verduras",perro:["si","Segura, aunque casi no aporta. Ojo con ensaladas con cebolla o aderezo."],gato:["cuidado","Un poquito no hace daño."]},
+ {n:"Brócoli y coliflor",a:"brocoli coliflor repollo col",c:"Verduras",perro:["cuidado","En poca cantidad y cocido está bien. Mucho da gases y puede irritar el estómago."],gato:["cuidado","Poquito y cocido."]},
+ {n:"Espinaca y acelga",a:"espinaca acelga",c:"Verduras",perro:["cuidado","Un poco cocida está bien, pero tienen oxalatos: no seguido, y menos si tiene problemas renales o cálculos."],gato:["cuidado","Mejor evitarla si tiene problemas urinarios."]},
+ {n:"Morrón",a:"morron pimiento",c:"Verduras",perro:["cuidado","El morrón rojo o amarillo en poca cantidad está bien. Los picantes, no."],gato:["cuidado","Poquito, si le interesa."]},
+ {n:"Remolacha",a:"remolacha betarraga",c:"Verduras",perro:["cuidado","Cocida y en poca cantidad no hace daño. Puede teñir la caca o el pis de rojo: no te asustes."],gato:["cuidado","Poquito y cocida."]},
+ {n:"Berenjena",a:"berenjena",c:"Verduras",perro:["cuidado","Cocida y sin condimentos, poquita. Las berenjenas en escabeche no: ajo y vinagre."],gato:["cuidado","Mejor evitarla."]},
+ {n:"Hongos y champiñones",a:"hongos champinones champignon setas",c:"Verduras",perro:["cuidado","Los de supermercado, cocidos y sin condimentos, no suelen hacer daño. Los que crecen en el jardín o el parque pueden ser muy tóxicos: si comió uno, consultá ya."],gato:["cuidado","Mejor evitarlos. Los silvestres pueden ser muy tóxicos."]},
+ {n:"Aceitunas",a:"aceitunas olivas",c:"Verduras",perro:["cuidado","Sin carozo y alguna suelta, no es grave. Son muy saladas y el carozo puede trabarse."],gato:["cuidado","Muy saladas. Mejor no."]},
+ {n:"Legumbres cocidas",a:"lentejas garbanzos porotos frijoles soja",c:"Verduras",perro:["cuidado","Bien cocidas y sin condimentos, un poco está bien. Dan muchos gases. Las de lata, enjuagadas por la sal."],gato:["cuidado","No le aportan mucho. Poquito, si quiere."]},
+ {n:"Choclo en lata",a:"choclo en lata enlatados conserva",c:"Verduras",perro:["cuidado","Las verduras en lata suelen tener mucha sal. Mejor frescas o congeladas, cocidas."],gato:["cuidado","Mucha sal. Mejor frescas."]},
+/* --- Frutas --- */
+ {n:"Pera",a:"pera",c:"Frutas",perro:["si","Sin semillas ni corazón, en trocitos."],gato:["cuidado","Un trocito sin semillas."],sugar:1},
+ {n:"Melón",a:"melon",c:"Frutas",perro:["si","Sin cáscara ni semillas, ideal para el verano. Tiene azúcar: con moderación."],gato:["cuidado","A algunos gatos les gusta. Un trocito."],sugar:1},
+ {n:"Durazno y damasco",a:"durazno damasco pelon nectarina",c:"Frutas",perro:["cuidado","La pulpa está bien, pero el carozo es peligroso: se traba y tiene sustancias tóxicas. Cuidado con los que caen del árbol en el patio."],gato:["cuidado","La pulpa, un trocito. El carozo nunca."],sugar:1},
+ {n:"Ciruelas y cerezas",a:"ciruela cereza guinda",c:"Frutas",perro:["no","El carozo y las hojas tienen sustancias tóxicas y el carozo se puede trabar. No vale la pena el riesgo."],gato:["no","Carozo tóxico. No."],sugar:1},
+ {n:"Kiwi",a:"kiwi",c:"Frutas",perro:["cuidado","Pelado y en trocitos, un poco está bien. Es ácido."],gato:["cuidado","Un trocito, si quiere."],sugar:1},
+ {n:"Ananá",a:"anana pina",c:"Frutas",perro:["cuidado","Fresco, pelado y en trocitos chicos. El de lata en almíbar, no."],gato:["cuidado","Muy poquito."],sugar:1},
+ {n:"Mango",a:"mango",c:"Frutas",perro:["cuidado","Pelado y sin carozo, unos trocitos. Tiene mucho azúcar."],gato:["cuidado","Poquito."],sugar:1},
+ {n:"Coco",a:"coco",c:"Frutas",perro:["cuidado","Un poquito de pulpa está bien, pero es grasoso. La cáscara no."],gato:["cuidado","Poquito, es grasoso."],fat:1},
+ {n:"Higos",a:"higo higos",c:"Frutas",perro:["cuidado","La fruta en poca cantidad no es grave, pero la planta irrita. Mejor evitar."],gato:["cuidado","Mejor evitar."],sugar:1},
+ {n:"Nueces, almendras y pistachos",a:"nueces nuez almendras pistachos avellanas castanas frutos secos",c:"Frutas",perro:["no","Muy grasos, se atragantan fácil y las nueces pueden tener hongos tóxicos. Mejor ninguno (el maní sin sal es otra cosa)."],gato:["no","Grasos y difíciles de digerir. No."],fat:1},
+ {n:"Dulce de membrillo y batata",a:"membrillo dulce de batata mermelada jalea",c:"Dulces",perro:["no","Pura azúcar. No es tóxico, pero no le hace bien."],gato:["no","Azúcar: no."],sugar:1},
+/* --- Comidas caseras y de panadería --- */
+ {n:"Puré de papa",a:"pure de papa pure mixto",c:"Comidas caseras",perro:["cuidado","Solo papa con agua, sin manteca, leche, sal ni nuez moscada, un poco está bien. El puré de la familia casi siempre tiene algo de eso."],gato:["cuidado","Solo papa con agua y poquito."]},
+ {n:"Polenta",a:"polenta harina de maiz",c:"Comidas caseras",perro:["cuidado","Sola, con agua y sin sal ni queso, no hace daño pero casi no aporta. Con tuco o queso, no."],gato:["cuidado","No le aporta. Poquito y solo."]},
+ {n:"Avena cocida",a:"avena",c:"Comidas caseras",perro:["si","Cocida con agua y sin azúcar es buena fibra. En poca cantidad."],gato:["cuidado","Poquito y cocida."]},
+ {n:"Tortilla de papa",a:"tortilla de papa tortilla espanola",c:"Comidas caseras",perro:["no","Casi siempre lleva cebolla, además de aceite y sal."],gato:["no","Cebolla: no."],fat:1},
+ {n:"Guiso y locro",a:"guiso locro estofado puchero cazuela",c:"Comidas caseras",perro:["no","Llevan cebolla, ajo, chorizo, panceta y sal. La carne hervida aparte, sin nada, sí."],gato:["no","Cebolla y grasa: no."],fat:1},
+ {n:"Ravioles, ñoquis y lasaña",a:"ravioles noquis lasana canelones sorrentinos pastas rellenas",c:"Comidas caseras",perro:["no","Las salsas y los rellenos suelen llevar cebolla, ajo, queso y nuez moscada."],gato:["no","Salsa y relleno: no."],fat:1},
+ {n:"Sopa de sobre y cubitos",a:"sopa instantanea sopa de sobre cubito caldo en cubo",c:"Comidas caseras",perro:["no","Muchísima sal y cebolla o ajo en polvo."],gato:["no","Sal y cebolla en polvo: no."]},
+ {n:"Tostadas y galletas de agua",a:"tostada galleta de agua galletitas saladas crackers grisines",c:"Comidas caseras",perro:["cuidado","Un pedacito sin manteca ni mermelada no hace daño. Las saladas, mejor no."],gato:["cuidado","No le aportan nada."]},
+ {n:"Snacks y papas fritas",a:"snacks papas fritas chizitos palitos nachos",c:"Comidas caseras",perro:["no","Sal, grasa y a veces cebolla o ajo en polvo."],gato:["no","Sal y grasa: no."],fat:1},
+ {n:"Pochoclo",a:"pochoclo palomitas pururu",c:"Otros",perro:["cuidado","Solo hecho sin sal, sin manteca ni azúcar, y sin los granos sin reventar. El del cine o con caramelo, no."],gato:["cuidado","Mejor no: se pueden atragantar."]},
+ {n:"Tortas y bizcochuelos",a:"torta bizcochuelo budin pan dulce pasteles",c:"Dulces",perro:["no","Azúcar, manteca y a veces chocolate, pasas o nuez moscada. El pan dulce tiene pasas: peligroso."],gato:["no","Azúcar y manteca: no."],sugar:1,fat:1},
+ {n:"Miel",a:"miel",c:"Dulces",perro:["cuidado","Es azúcar: una puntita de vez en cuando como mucho. Nunca a cachorros ni a perros con diabetes."],gato:["no","Azúcar: no la necesita."],sugar:1},
+ {n:"Caramelos y golosinas",a:"caramelos golosinas chupetin gomitas turron",c:"Dulces",perro:["no","Azúcar, y los \"sin azúcar\" pueden tener xilitol (muy peligroso). Los envoltorios también traban."],gato:["no","No."],sugar:1},
+/* --- Lácteos --- */
+ {n:"Crema de leche",a:"crema de leche crema chantilly",c:"Lácteos",perro:["no","Mucha grasa y lactosa: diarrea y riesgo de pancreatitis."],gato:["no","Aunque les encante, les cae mal."],fat:1},
+ {n:"Ricota y queso crema",a:"ricota queso crema queso blanco untable",c:"Lácteos",perro:["cuidado","Una cucharadita de ricota magra puede estar bien. El queso crema es más graso."],gato:["cuidado","Muy poquito."],fat:1},
+ {n:"Leche deslactosada",a:"leche deslactosada leche sin lactosa",c:"Lácteos",perro:["cuidado","La toleran mejor que la común, pero no la necesitan. Muy poca, si querés."],gato:["cuidado","Mejor que la común, pero el agua es lo ideal."]},
+/* --- Bebidas y otros --- */
+ {n:"Gaseosas y jugos",a:"gaseosa coca jugo jugo en polvo bebidas energizantes",c:"Bebidas",perro:["no","Azúcar, cafeína o edulcorantes. Lo único que necesita es agua fresca."],gato:["no","Solo agua."],sugar:1},
+ {n:"Hielo",a:"hielo cubitos",c:"Bebidas",perro:["si","Unos cubitos en verano están bien. Si es de morder muy fuerte, cuidado con los dientes. Si tiene golpe de calor, mejor agua fresca, no helada."],gato:["si","Un cubito en el agua en verano está bien."]},
+ {n:"Alimento de gato",a:"alimento de gato comida de gato balanceado de gato",c:"Otros",perro:["cuidado","Si le roba un poco no pasa nada, pero tiene más grasa y proteína de la que necesita. No como costumbre."],gato:["si","Es su comida."],fat:1},
+ {n:"Alimento de perro",a:"alimento de perro comida de perro balanceado de perro",c:"Otros",perro:["si","Es su comida."],gato:["no","No sirve como comida para gatos: le faltan nutrientes que ellos necesitan, como la taurina. Si come un poco, no pasa nada."]}
+];
+
+const PLANTS = [
+ {n:"Lirios y azucenas",s:"no",t:"Para gatos son de lo más peligroso que hay: una hoja, el polen o el agua del florero pueden causar falla renal. Si tenés gato, no los tengas en casa. Para perros: malestar de estómago."},
+ {n:"Laurel de jardín (adelfa)",s:"no",t:"Muy tóxica para perros y gatos: afecta el corazón. Común en veredas y jardines de Mendoza."},
+ {n:"Cica (sagú)",s:"no",t:"Las semillas y hojas dañan el hígado. Muy peligrosa para perros."},
+ {n:"Potus",s:"cuidado",t:"Irrita la boca: babeo, vómitos y dificultad para tragar."},
+ {n:"Filodendro",s:"cuidado",t:"Irrita la boca y el estómago, igual que el potus."},
+ {n:"Bastón del emperador (difenbaquia)",s:"cuidado",t:"Hincha la boca y la lengua. Puede dar mucho babeo y vómitos."},
+ {n:"Aloe vera",s:"cuidado",t:"Comerlo da vómitos y diarrea."},
+ {n:"Azalea",s:"no",t:"Puede causar vómitos, debilidad y problemas de corazón."},
+ {n:"Tulipanes y jacintos",s:"cuidado",t:"Los bulbos son la parte más tóxica. Ojo con perros que escarban."},
+ {n:"Flor de Navidad",s:"cuidado",t:"Irritación leve en boca y estómago. Menos grave de lo que se cree, pero mejor fuera de alcance."},
+ {n:"Ficus",s:"cuidado",t:"La savia irrita la piel y la boca."},
+ {n:"Lazo de amor (cinta)",s:"si",t:"No es tóxica. A los gatos les encanta mordisquearla."},
+ {n:"Helecho de Boston",s:"si",t:"Segura para perros y gatos."},
+ {n:"Calathea",s:"si",t:"Segura para perros y gatos."}
+];
+const OBJECTS = [
+ {n:"Remedios para humanos",s:"no",t:"El ibuprofeno y el paracetamol son muy peligrosos. El paracetamol puede ser mortal para un gato. Nunca les des remedios sin indicación del veterinario."},
+ {n:"Veneno para ratas y hormigas",s:"no",t:"Emergencia inmediata. Llevá el envase al veterinario."},
+ {n:"Pilas y baterías",s:"no",t:"Las pilas botón pueden quemar el estómago por dentro."},
+ {n:"Hilo, lana y cintas",s:"no",t:"Los gatos los tragan y pueden trabar el intestino. Si ves un hilo saliendo, no tires: consultá."},
+ {n:"Anticongelante del auto",s:"no",t:"Tiene gusto dulce y es mortal en poca cantidad."},
+ {n:"Lavandina y productos de limpieza",s:"cuidado",t:"Guardalos cerrados. Dejá secar el piso antes de que pase tu mascota."}
+];
+const CONTROLS = [
+ {id:"vac",n:"Vacuna anual",days:365},
+ {id:"des",n:"Desparasitación interna",days:90},
+ {id:"pip",n:"Pipeta o pastilla antipulgas",days:30}
+];
+const TREATS = [ ["Zanahoria mediana",25],["Rodaja de manzana",10],["Rodaja de banana (1 cm)",8],["Arándanos (10)",8],["Cubo de queso (1 cm)",20],["Huevo duro",75],["Pollo hervido (30 g)",50] ];
+
+/* ===== Estado guardado en el celular ===== */
+const KEY="hocico_v1";
+const HOUSE=["ownName","ownTel","vName","vTel","gName","gTel"];
+const uid=()=>Math.random().toString(36).slice(2,9);
+const S = load();
+function load(){
+  let d={}; try{ d=JSON.parse(localStorage.getItem(KEY)||"{}")||{}; }catch(e){}
+  const s=Object.assign({sp:"perro",pets:[],cur:0,sel:-1,house:{},meds:[],dn:{},me:"",favs:[],legal:false},d);
+  if(d.pet&&!d.pets){ /* pasar el perfil único viejo a la lista de mascotas */
+    const o=d.pet; HOUSE.forEach(k=>{ if(o[k]) s.house[k]=o[k]; delete o[k]; });
+    o.ctrl=d.ctrl||{}; o.id=uid();
+    if(o.name||o.w||o.photo){ s.pets=[o]; s.sel=0; s.meds.forEach(m=>m.pid=o.id); }
+  }
+  s.pets.forEach(p=>{ if(!p.contacts) p.contacts=s.house.ownTel?[{n:s.house.ownName||"",t:s.house.ownTel}]:[]; });
+  s.meds.forEach(m=>{ if(!m.id) m.id=uid(); });
+  delete s.pet; delete s.ctrl; delete s.done; return s;
+}
+const P=()=>S.pets[S.cur]||null;
+const SEL=()=>S.sel>=0?S.pets[S.sel]||null:null;
+const petName=id=>{ const p=S.pets.find(x=>x.id===id); return p?(p.name||"Sin nombre"):""; };
+function newPet(){ S.pets.push({id:uid(),sp:S.sp,conds:[],ctrl:{}}); S.cur=S.pets.length-1; return P(); }
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm=s=>String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9 ]/g," ").replace(/ll/g,"y").replace(/z/g,"s").replace(/\s+/g," ").trim();
+const LBL={si:"Sí puede",cuidado:"Con cuidado",no:"No"};
+const SNOUT='<svg viewBox="0 0 64 64"><path d="M12 38c0-10 9-18 20-18s20 8 20 18c0 8-8 13-20 13S12 46 12 38z" fill="#fffef8" opacity=".7"/><path d="M32 40.5c-.4-.4-7-4.6-7-8.6 0-2.3 1.7-3.9 3.7-3.9 1.4 0 2.6.8 3.3 1.9.7-1.1 1.9-1.9 3.3-1.9 2 0 3.7 1.6 3.7 3.9 0 4-6.6 8.2-7 8.6z" fill="#56662b"/></svg>';
+
+/* ===== Búsqueda tolerante a faltas ===== */
+function lev(a,b){ if(Math.abs(a.length-b.length)>2) return 9; const d=[...Array(b.length+1).keys()]; for(let i=1;i<=a.length;i++){ let p=d[0]; d[0]=i; for(let j=1;j<=b.length;j++){ const t=d[j]; d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1)); p=t; } } return d[b.length]; }
+FOODS.forEach(f=>{ f.nn=norm(f.n); f.words=norm(f.n+" "+f.a).split(" "); f.hay=norm(f.n+" "+f.a); });
+function search(q){
+  q=norm(q).replace(/s\b/g,""); if(!q) return [];
+  const STOP=["de","la","el","los","las","con","sin","y","un","una","del","al","mi","puede","comer"];
+  const qw=q.split(" ").filter(w=>w.length>1&&!STOP.includes(w));
+  const scored=FOODS.map(f=>{
+    let sc=0;
+    if(f.hay.includes(q)) sc+=10;
+    qw.forEach(w=>{ let best=0; f.words.forEach(fw=>{ const fw2=fw.replace(/s$/,""); if(fw2===w) best=Math.max(best,6); else if(fw2.startsWith(w)||w.startsWith(fw2)&&fw2.length>2) best=Math.max(best,4); else { const tol=w.length>6?2:w.length>3?1:0; if(tol&&lev(w,fw2)<=tol) best=Math.max(best,3); } }); sc+=best; if(best&&norm(f.n).includes(w)) sc+=2; });
+    if(f.nn.startsWith(q)) sc+=5;
+    return [sc,f];
+  }).filter(x=>x[0]>0).sort((a,b)=>b[0]-a[0]);
+  return scored.slice(0,8).map(x=>x[1]);
+}
+
+/* ===== Personalización según el perfil ===== */
+function personal(f,st){
+  const p=SEL(); if(!p) return "";
+  if(p.sp && p.sp!==S.sp) return "";
+  const out=[], c=p.conds||[], nm=esc(p.name||"tu mascota");
+  if(st!=="no"){
+    if(f.sugar&&c.includes("diabetes")) out.push(`<b>${nm} tiene diabetes:</b> esta comida tiene azúcar. Mejor evitarla o consultá antes.`);
+    if(f.fat&&(c.includes("pancreatitis"))) out.push(`<b>${nm} tuvo pancreatitis:</b> esta comida es grasosa. Mejor evitarla.`);
+    if((f.fat||f.sugar)&&c.includes("sobrepeso")) out.push(`<b>Sobrepeso:</b> si le das, que sea muy poquito y descontalo de su comida.`);
+    if(c.includes("estomago")) out.push(`<b>Estómago sensible:</b> cualquier comida nueva, de a muy poco para ver cómo le cae.`);
+    if(c.includes("renal")&&/queso|atun|higado|carne|pollo|huevo/i.test(f.n)) out.push(`<b>Problema renal:</b> las proteínas extra se controlan. Consultá la cantidad con tu veterinario.`);
+    if(p.w&&+p.w<8) out.push(`<b>${nm} pesa ${esc(p.w)} kg:</b> que la porción sea del tamaño de un bocado chico.`);
+  }
+  if(p.age!==undefined&&p.age!==""&&+p.age<1) out.push(`<b>${S.sp==="perro"?"Cachorro":"Gatito"}:</b> su estómago es más delicado. Ante la duda, consultá.`);
+  if(p.age&&+p.age>=10) out.push(`<b>${nm} ya es mayor:</b> los cambios de comida le pueden caer peor. De a poquito.`);
+  if(p.sex==="hembra"&&p.neut!=="si") out.push(`<b>${nm} no está castrada:</b> si está preñada o amamantando, necesita más calorías y cuidados. Consultá antes de sumarle comidas nuevas.`);
+  return out.map(t=>`<div class="alert pers"><span>🐾</span><span>${t}</span></div>`).join("");
+}
+
+function foodCard(f,open){
+  const [st,txt]=f[S.sp], fav=S.favs.includes(f.n);
+  return `<article class="food"><button class="food-head" type="button" aria-expanded="${open?"true":"false"}" data-food="${esc(f.n)}">
+    <span class="light ${st}" aria-hidden="true"></span>
+    <span class="food-name">${esc(f.n)}<br><span class="food-cat">${esc(f.c)}</span></span>
+    <span class="verdict ${st}">${LBL[st]}</span></button>
+    <div class="food-body" ${open?"":"hidden"}>
+      <p>${esc(txt)}</p>${personal(f,st)}
+      <div class="row-actions"><button class="btn small ghost" type="button" data-fav="${esc(f.n)}">${fav?"★ En favoritos":"☆ Guardar en favoritos"}</button>
+      ${st==="no"?`<button class="btn small danger" type="button" data-sos>¿Ya lo comió? Emergencia</button>`:""}</div>
+    </div></article>`;
+}
+
+/* ===== Inicio ===== */
+function renderSpecies(){
+  const sel=SEL();
+  const pets=S.pets.map((p,i)=>p.name?`<button class="chip" type="button" data-selpet="${i}" aria-pressed="${S.sel===i}">${p.photo?`<img class="mini" src="${p.photo}" alt="">`:(p.sp==="gato"?"🐱":"🐶")} ${esc(p.name)}</button>`:"").join("");
+  $(".species").innerHTML=pets+`<button class="chip" type="button" data-sp="perro" aria-pressed="${!sel&&S.sp==="perro"}">🐶 Perro</button><button class="chip" type="button" data-sp="gato" aria-pressed="${!sel&&S.sp==="gato"}">🐱 Gato</button>`;
+  $("#heroTitle").textContent=sel&&sel.name?`¿Qué quiere comer ${sel.name}?`:"¿Qué quiere comer tu mascota?";
+  renderTip();
+}
+function renderResults(){
+  const q=$("#q").value, box=$("#results");
+  if(!q.trim()){ box.innerHTML=""; return; }
+  const r=search(q);
+  if(!r.length) logMissing(q);
+  box.innerHTML = r.length ? r.map((f,i)=>foodCard(f,i===0)).join("") :
+   `<div class="empty"><b>Todavía no tenemos "${esc(q)}".</b><br>Ya lo anotamos para sumarlo pronto. Mientras tanto, ante la duda no se lo des y consultá a tu veterinario.</div>`;
+}
+const QUICK=["Pastel de papa","Uvas","Zapallo","Asado","Mate","Banana","Leche","Chocolate"];
+$("#quick").innerHTML=QUICK.map(x=>`<button type="button">${x}</button>`).join("");
+$("#quick").addEventListener("click",e=>{ if(e.target.tagName==="BUTTON"){ $("#q").value=e.target.textContent; renderResults(); }});
+$("#q").addEventListener("input",renderResults);
+$(".species").style.flexWrap="wrap";
+$(".species").addEventListener("click",e=>{
+  const pb=e.target.closest("[data-selpet]"), sb=e.target.closest("[data-sp]");
+  if(pb){ S.sel=+pb.dataset.selpet; S.cur=S.sel; S.sp=SEL().sp||"perro"; }
+  else if(sb){ S.sel=-1; S.sp=sb.dataset.sp; } else return;
+  save(); renderSpecies(); renderResults();
+});
+
+document.addEventListener("click",e=>{
+  const h=e.target.closest("[data-food]");
+  if(h){ const body=h.nextElementSibling, o=h.getAttribute("aria-expanded")==="true"; h.setAttribute("aria-expanded",!o); body.hidden=o; return; }
+  const fv=e.target.closest("[data-fav]");
+  if(fv){ const n=fv.dataset.fav, i=S.favs.indexOf(n); i<0?S.favs.push(n):S.favs.splice(i,1); save(); fv.textContent=S.favs.includes(n)?"★ En favoritos":"☆ Guardar en favoritos"; if(!$("#masSub").hidden&&curSub==="favoritos") openSub("favoritos"); return; }
+  if(e.target.closest("[data-sos]")) openSOS();
+});
+
+/* ===== Aviso legal inicial ===== */
+if(!S.legal) $("#legalBanner").hidden=false;
+$("#legalOk").addEventListener("click",()=>{ S.legal=true; save(); $("#legalBanner").hidden=true; });
+
+/* ===== Mascota ===== */
+const PF={pName:"name",pSp:"sp",pSex:"sex",pBreed:"breed",pW:"w",pAge:"age",pNeut:"neut",oName:"oName",oNum:"oNum",oTel:"oTel"};
+const HF={vName:"vName",vTel:"vTel",gName:"gName",gTel:"gTel"};
+let delArmed=false;
+function renderPet(){
+  if(!S.pets.length) newPet();
+  if(!P()) S.cur=0;
+  const p=P();
+  $("#petBar").innerHTML=S.pets.map((x,i)=>`<button class="chip" type="button" data-pet="${i}" aria-pressed="${i===S.cur}">${x.photo?`<img class="mini" src="${x.photo}" alt="">`:(x.sp==="gato"?"🐱":"🐶")} ${esc(x.name||"Nueva mascota")}</button>`).join("")
+    +`<button class="chip" type="button" data-pet="new">+ Agregar otra</button>`;
+  Object.entries(PF).forEach(([id,k])=>{ const el=document.getElementById(id); if(p[k]!==undefined&&p[k]!=="") el.value=p[k]; else if(el.tagName==="SELECT") el.selectedIndex=0; else el.value=""; });
+  if(!p.sp) $("#pSp").value=S.sp;
+  Object.entries(HF).forEach(([id,k])=>{ document.getElementById(id).value=S.house[k]||""; });
+  $$("#conds input").forEach(c=>c.checked=(p.conds||[]).includes(c.value));
+  $("#avatar").innerHTML=p.photo?`<img src="${p.photo}" alt="Foto de ${esc(p.name||"tu mascota")}">`:SNOUT;
+  const d=$("#delPet"); d.hidden=S.pets.length<2&&!p.name; delArmed=false; d.textContent="Quitar esta mascota";
+  drawContacts((p.contacts&&p.contacts.length)?p.contacts:[{n:"",t:""}]);
+  renderShare();
+  $("#qrOut").hidden=true; $("#qrMsg").hidden=true;
+}
+$("#petBar").addEventListener("click",e=>{
+  const b=e.target.closest("[data-pet]"); if(!b) return;
+  if(b.dataset.pet==="new"){ const cur=P(); if(cur&&!cur.name&&!cur.photo){ $("#pName").focus(); return; } newPet(); }
+  else S.cur=+b.dataset.pet;
+  renderPet(); $("#pName").focus();
+});
+function drawContacts(list){
+  $("#contacts").innerHTML=list.map((c,i)=>`<div class="grid2 crow"><div class="field"><label for="cn${i}">Nombre</label><input id="cn${i}" class="cn" placeholder="Ej: Tony" value="${esc(c.n)}"></div>
+    <div class="field"><label for="ct${i}">Teléfono</label><div style="display:flex;gap:6px"><input id="ct${i}" class="ct" type="tel" placeholder="261 ..." value="${esc(c.t)}" style="flex:1;min-width:0">${list.length>1?`<button class="btn small danger" type="button" data-delc="${i}" aria-label="Quitar contacto">✕</button>`:""}</div></div></div>`).join("");
+}
+function readContacts(){ return $$("#contacts .crow").map(r=>({n:r.querySelector(".cn").value.trim(),t:r.querySelector(".ct").value.trim()})); }
+$("#addContact").addEventListener("click",()=>{ const l=readContacts(); l.push({n:"",t:""}); drawContacts(l); $("#cn"+(l.length-1)).focus(); });
+$("#contacts").addEventListener("click",e=>{ const b=e.target.closest("[data-delc]"); if(!b) return; const l=readContacts(); l.splice(+b.dataset.delc,1); drawContacts(l.length?l:[{n:"",t:""}]); });
+$("#delPet").addEventListener("click",()=>{
+  const d=$("#delPet");
+  if(!delArmed){ delArmed=true; d.textContent="Tocá otra vez para confirmar"; return; }
+  const p=P(); S.meds=S.meds.filter(m=>m.pid!==p.id);
+  S.pets.splice(S.cur,1); S.cur=0; S.sel=S.pets.findIndex(x=>x.name);
+  save(); renderPet(); renderSpecies(); renderResults();
+});
+$("#petForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const p=P()||newPet();
+  Object.entries(PF).forEach(([id,k])=>{ p[k]=document.getElementById(id).value.trim(); });
+  Object.entries(HF).forEach(([id,k])=>{ S.house[k]=document.getElementById(id).value.trim(); });
+  p.conds=$$("#conds input:checked").map(c=>c.value);
+  p.contacts=readContacts().filter(c=>c.t);
+  p.updated=Date.now(); if(p.share) syncSoon();
+  if(p.name){ S.sel=S.cur; S.sp=p.sp||S.sp; }
+  save(); renderPet(); renderSpecies(); renderResults();
+  const m=$("#savedMsg"); m.hidden=false; setTimeout(()=>m.hidden=true,2200);
+});
+$("#photo").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader(); rd.onload=()=>{ const img=new Image(); img.onload=()=>{ const s=240,c=document.createElement("canvas"); c.width=c.height=s; const m=Math.min(img.width,img.height); c.getContext("2d").drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,s,s); (P()||newPet()).photo=c.toDataURL("image/jpeg",.8); save(); renderPet(); renderSpecies(); }; img.src=rd.result; }; rd.readAsDataURL(f);
+  e.target.value="";
+});
+
+/* ===== Recordatorios ===== */
+const today=()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+function renderReminders(){
+  const t=today();
+  Object.keys(S.dn).forEach(k=>{ if(!k.startsWith(t)) delete S.dn[k]; });
+  const named=S.pets.filter(p=>p.name), multi=named.length>1;
+  $("#mPet").innerHTML=named.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
+  $("#mPetWrap").hidden=!named.length;
+  const tag=m=>multi&&m.pid?`<span class="petname">${esc(petName(m.pid))}</span> · `:"";
+  const doses=[]; S.meds.forEach(m=>m.times.forEach(h=>doses.push({h,m,key:t+"|"+m.id+"@"+h})));
+  doses.sort((a,b)=>a.h.localeCompare(b.h));
+  const st=k=>S.dn[k]&&S.dn[k].v?S.dn[k]:null;
+  const hhmm=ms=>new Date(ms).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hour12:false});
+  $("#today").innerHTML = doses.length ? doses.map(d=>{ const dn=st(d.key);
+    const sub=dn?`Dada${dn.by?" por "+esc(dn.by):""} a las ${hhmm(dn.t)}`:esc(d.m.dose||"");
+    return `<div class="dose ${dn?"done":""}"><time>${esc(d.h)}</time><div class="what">${tag(d.m)}<b>${esc(d.m.name)}</b><br><span class="note">${sub}</span></div>
+    <button class="tick" type="button" data-dose="${esc(d.key)}" data-pid="${esc(d.m.pid||"")}" aria-label="${dn?"Marcar como no dada":"Marcar como dada"}">${dn?"✓":""}</button></div>`; }).join("")
+    : `<p class="note">No hay tomas cargadas. Agregá una medicación abajo.</p>`;
+  $("#medList").innerHTML = S.meds.length ? S.meds.map(m=>`<div class="med"><div>${tag(m)}<b>${esc(m.name)}</b> <span class="note">${esc(m.dose||"")}</span><br><span class="note">${m.times.map(esc).join(" · ")}</span></div><button class="btn small danger" type="button" data-delmed="${esc(m.id)}">Quitar</button></div>`).join("")
+    : `<p class="note">Sin medicación cargada.</p>`;
+  $("#ctrlList").innerHTML = named.length ? named.map(p=>{ p.ctrl=p.ctrl||{};
+    return (multi?`<h3 class="petname" style="margin-top:8px">${esc(p.name)}</h3>`:"")+CONTROLS.map(c=>{ const last=p.ctrl[c.id]; let pill="";
+    if(last){ const next=new Date(last+"T12:00"); next.setDate(next.getDate()+c.days); const diff=Math.round((next-new Date())/864e5);
+      const nx=next.toLocaleDateString("es-AR",{day:"numeric",month:"short"});
+      pill = diff<0?`<span class="pill late">Vencida hace ${-diff} d</span>`: diff<=7?`<span class="pill soon">Toca el ${nx}</span>`:`<span class="pill ok">Próxima: ${nx}</span>`; }
+    return `<div class="ctrl"><label for="c-${p.id}-${c.id}"><b>${c.n}</b><br><span class="note">Cada ${c.days} días</span></label>${pill||'<span class="note">Sin fecha</span>'}
+      <input id="c-${p.id}-${c.id}" type="date" data-ctrl="${p.id}|${c.id}" value="${esc(last||"")}" style="grid-column:1/-1;border:1.5px solid var(--line);background:var(--bg);border-radius:12px;padding:9px 12px;min-width:0"></div>`; }).join(""); }).join("")
+    : `<p class="note">Cargá tu mascota en <b>Mi mascota</b> para llevar sus vacunas y desparasitaciones.</p>`;
+  /* Resumen del día para mandar por WhatsApp a la otra casa */
+  $("#shareWrap").hidden=!doses.length;
+  if(doses.length){
+    const fecha=new Date().toLocaleDateString("es-AR",{weekday:"long",day:"numeric",month:"numeric"});
+    const lines=doses.map(d=>{ const dn=st(d.key); return `${dn?"✅":"⏳"} ${d.h} ${d.m.pid&&petName(d.m.pid)?petName(d.m.pid)+": ":""}${d.m.name}${d.m.dose?" ("+d.m.dose+")":""} — ${dn?"dada"+(dn.by?" por "+dn.by:""):"pendiente"}`; });
+    $("#shareDay").href="https://wa.me/?text="+encodeURIComponent(`Tomas de hoy, ${fecha}:\n`+lines.join("\n")+"\n\nEnviado desde Hocico");
+  }
+}
+function touchMeds(pid){ const p=S.pets.find(x=>x.id===pid); if(p){ p.medsAt=Date.now(); if(p.share) syncSoon(); } }
+$("#medForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const times=$("#mTimes").value.split(/[,;\s]+/).map(x=>x.trim()).filter(Boolean).map(x=>{ const m=x.match(/^(\d{1,2})(?::|\.|h)?(\d{2})?$/); if(!m) return null; const h=Math.min(23,+m[1]), mi=Math.min(59,+(m[2]||0)); return String(h).padStart(2,"0")+":"+String(mi).padStart(2,"0"); }).filter(Boolean);
+  if(!times.length){ $("#mTimes").setCustomValidity("Escribí horarios como 08:00, 20:00"); $("#mTimes").reportValidity(); return; }
+  const pid=$("#mPet").value||null;
+  S.meds.push({id:uid(),pid,name:$("#mName").value.trim(),dose:$("#mDose").value.trim(),times:[...new Set(times)].sort()});
+  touchMeds(pid); save(); e.target.reset(); renderReminders(); if(pid) $("#mPet").value=pid;
+});
+$("#mTimes").addEventListener("input",e=>e.target.setCustomValidity(""));
+$("#v-recordatorios").addEventListener("click",e=>{
+  const d=e.target.closest("[data-dose]"); if(d){ const k=d.dataset.dose, cur=S.dn[k]; S.dn[k]={v:!(cur&&cur.v),t:Date.now(),by:S.me||""}; save(); renderReminders();
+    const p=S.pets.find(x=>x.id===d.dataset.pid); if(p&&p.share) syncSoon(); return; }
+  const dm=e.target.closest("[data-delmed]"); if(dm){ const i=S.meds.findIndex(m=>m.id===dm.dataset.delmed); if(i>=0){ const pid=S.meds[i].pid; S.meds.splice(i,1); touchMeds(pid); save(); renderReminders(); } }
+});
+$("#v-recordatorios").addEventListener("change",e=>{ const c=e.target.dataset.ctrl; if(c){ const [pid,cid]=c.split("|"), p=S.pets.find(x=>x.id===pid); if(p){ p.ctrl=p.ctrl||{}; p.ctrl[cid]=e.target.value; p.updated=Date.now(); save(); renderReminders(); if(p.share) syncSoon(); } } });
+
+/* ===== Preguntas frecuentes (contenido de prueba, a revisar por veterinario) ===== */
+const FAQ=[
+ ["Castración y celo","ambos","Mi perra tiene 8 años, ¿es peligroso castrarla?","Es algo que se hace seguido. Con la edad el riesgo de la anestesia es un poco mayor, por eso antes suelen pedir análisis de sangre y a veces un control del corazón. El gran beneficio a esa edad es evitar la piometra, una infección grave del útero muy común en perras mayores sin castrar.","La decisión la toma tu veterinario después de revisarla."],
+ ["Castración y celo","ambos","¿A qué edad conviene castrar?","En gatos suele hacerse alrededor de los 5 o 6 meses. En perros depende del tamaño: en razas chicas suele ser antes, y en razas grandes a veces se recomienda esperar un poco más.","Preguntale a tu veterinario cuál es el mejor momento para tu mascota."],
+ ["Castración y celo","ambos","¿Tiene que tener cría una vez antes de castrarla?","Es un mito. No le aporta ningún beneficio a su salud. Castrar antes de los primeros celos reduce mucho el riesgo de tumores de mama.",""],
+ ["Castración y celo","ambos","¿La castración los hace engordar?","Gastan un poco menos de energía después de castrarlos. Si ajustás la porción y sigue haciendo ejercicio, no tiene por qué engordar.","Usá la calculadora de porciones en Más como referencia."],
+ ["Castración y celo","ambos","¿Cada cuánto entra en celo?","Las perras suelen tener dos celos por año, de unas tres semanas cada uno. Las gatas pueden entrar en celo varias veces en primavera y verano si no quedan preñadas.","Durante el celo se escapan más: ojo con puertas y portones."],
+ ["Vacunas y parásitos","ambos","¿Qué vacunas necesita y cada cuánto?","Los cachorros y gatitos reciben una serie de vacunas en sus primeros meses. Después se hacen refuerzos, en general una vez por año. La antirrábica es obligatoria en Argentina, y muchos municipios hacen campañas gratuitas.","Cargala en Recordatorios para que no se te pase."],
+ ["Vacunas y parásitos","gato","Mi gato nunca sale, ¿igual hay que vacunarlo?","Sí. Algunas enfermedades entran a la casa en la ropa o los zapatos, y la antirrábica es obligatoria igual. Además, cualquier gato se puede escapar alguna vez.",""],
+ ["Vacunas y parásitos","ambos","¿Cada cuánto desparasitar?","Para los parásitos internos, en adultos se suele hacer cada 3 meses, y en cachorros más seguido. Para pulgas y garrapatas depende del producto: hay pipetas y pastillas que duran un mes y otras más.","Respetá el peso que indica el envase."],
+ ["Vacunas y parásitos","gato","¿Puedo ponerle al gato la pipeta del perro?","No. Muchas pipetas para perros tienen permetrina, que es muy tóxica para los gatos, aunque sea poquita. Usá siempre productos hechos para gatos.","Si ya se la pusiste y ves temblores o babeo, es una emergencia."],
+ ["Comida","ambos","¿Cuántas veces por día tiene que comer?","Los cachorros, de 3 a 4 veces por día. Los adultos suelen estar bien con 2 comidas. Los gatos prefieren comer poquito varias veces.",""],
+ ["Comida","ambos","¿Puede comer solo comida casera?","Puede, pero tiene que estar bien balanceada. La comida casera hecha \"a ojo\" suele quedarse corta en calcio y otros nutrientes.","Si querés darle comida casera, armala con tu veterinario."],
+ ["Comida","gato","¿Los gatos tienen que tomar leche?","Es un mito. La mayoría de los gatos adultos no digieren bien la lactosa y les da diarrea. Lo que necesitan es agua fresca.",""],
+ ["Comportamiento","perro","Mi perro come pasto, ¿está enfermo?","Es muy común y casi siempre es normal. A veces vomitan después.","Si vomita seguido, deja de comer o está decaído, consultá."],
+ ["Comportamiento","perro","¿Por qué se come la caca?","Es bastante común en cachorros y suele pasar con el tiempo. A veces tiene que ver con la dieta, el aburrimiento o parásitos.","Si sigue de adulto, consultá con tu veterinario."],
+ ["Comportamiento","ambos","¿Por qué arrastra la cola por el piso?","Muchas veces son las glándulas anales llenas o irritadas, y a veces parásitos.","Si lo hace seguido, que lo revise el veterinario."],
+ ["Comportamiento","perro","Llora o rompe todo cuando se queda solo","Puede ser ansiedad por separación. Ayuda que salga a pasear y juegue antes de quedarse solo, dejarle juguetes para morder y practicar salidas cortas.","Si es muy fuerte, consultá con tu veterinario o un especialista en comportamiento."],
+ ["Comportamiento","ambos","¿Por qué tiembla?","Puede ser frío, miedo o nervios. También puede ser dolor o una intoxicación.","Si tiembla sin motivo claro o no se le pasa, consultá."],
+ ["Comportamiento","gato","Mi gato no usa el arenero","Puede ser que esté sucio, en un lugar que no le gusta o que algo lo estrese. También puede ser un problema urinario.","Si va muchas veces y no sale nada, sobre todo si es macho, es una urgencia."],
+ ["Comportamiento","gato","¿Necesita rascador?","Sí. Rascar es una necesidad para ellos: cuidan las uñas y marcan territorio. Con un rascador, salvan tus sillones.",""],
+ ["Baño e higiene","perro","¿Cada cuánto bañar al perro?","En general, cada 3 o 4 semanas, o cuando realmente lo necesite. Bañarlo muy seguido le reseca la piel.","Secalo bien, sobre todo en invierno y en razas de pelo largo."],
+ ["Baño e higiene","perro","¿Puedo usar mi shampoo?","Mejor no. Su piel es distinta a la nuestra y el shampoo humano la puede irritar. Usá uno para perros.",""],
+ ["Baño e higiene","gato","¿Hay que bañar al gato?","Casi nunca: se limpian solos. Solo si se ensució con algo o si te lo indica el veterinario.",""],
+ ["Baño e higiene","ambos","¿Cada cuánto cortarle las uñas?","Cuando las escuchás hacer ruido en el piso, ya están largas. Cortalas de a poquito para no lastimar la parte rosada.","Si te da miedo, pedile al veterinario o a la peluquería que te enseñen."],
+ ["Cachorros y mayores","ambos","¿Cuándo puede salir a la calle el cachorro?","Cuando tenga completa la serie de vacunas que te indique el veterinario. Antes puede contagiarse enfermedades graves como el parvovirus.",""],
+ ["Cachorros y mayores","ambos","¿La regla de \"un año igual a siete\" es cierta?","No exactamente. Envejecen mucho más rápido al principio: un perro de un año ya es como un adolescente. Y los perros grandes envejecen antes que los chicos.",""],
+ ["Cachorros y mayores","ambos","¿Desde qué edad es \"mayor\"?","Muchos veterinarios consideran mayores a los perros y gatos desde los 7 u 8 años, y antes a las razas grandes. Desde ahí conviene hacer chequeos más seguido.",""],
+ ["Mitos","ambos","¿Si tiene la nariz seca, tiene fiebre?","Es un mito. La nariz puede estar seca o caliente por muchas cosas, como dormir o el clima. La fiebre se mide con termómetro.",""],
+ ["Urgencias","ambos","¿Cuándo es una urgencia?","Llamá ya si: le cuesta respirar, tiene convulsiones, comió algo tóxico, sangra mucho, lo atropellaron, tiene golpe de calor o no puede orinar. En perros grandes, si tiene la panza hinchada y hace arcadas sin vomitar, puede ser una torsión de estómago y es gravísimo.","Usá el botón Emergencia de arriba."]
+];
+function setupFaq(){
+  const box=$("#faqList"), inp=$("#faqQ");
+  const draw=()=>{
+    const q=norm(inp.value), cats=[...new Set(FAQ.map(f=>f[0]))];
+    const list=FAQ.filter(f=>!q||norm(f[2]+" "+f[3]+" "+f[0]).includes(q));
+    box.innerHTML=list.length?cats.map(c=>{ const it=list.filter(f=>f[0]===c); if(!it.length) return "";
+      return `<div class="card" style="gap:0"><h3 style="margin-bottom:6px">${c}</h3>${it.map(f=>`<details class="faq"${q?" open":""}><summary><span>${esc(f[2])}${f[1]!=="ambos"?`<br><span class="faqsp">${f[1]==="perro"?"Perros":"Gatos"}</span>`:""}</span></summary><div class="ans"><p>${esc(f[3])}</p>${f[4]?`<p class="note">${esc(f[4])}</p>`:""}</div></details>`).join("")}</div>`; }).join("")
+      :`<div class="empty">No encontramos esa pregunta. Ante la duda, consultá a tu veterinario.</div>`;
+  };
+  inp.addEventListener("input",draw); draw();
+}
+
+/* Correo para negocios: dejar vacío hasta tener el definitivo */
+const CONTACT_MAIL="";
+
+/* ===== Más ===== */
+let curSub=null;
+function openSub(k){
+  curSub=k; $("#masMenu").hidden=true; const box=$("#masSub"); box.hidden=false;
+  const back=`<button class="back" type="button" id="subBack">‹ Volver</button>`;
+  let h="";
+  if(k==="opinion"){
+    h=`${back}<h2>Dar mi opinión</h2><p class="note">Hocico está en prueba. Contanos qué te gustó, qué no se entiende o qué le falta. Lo leemos todo.</p>
+    <form class="card" id="fbForm"><span class="lbl">¿Qué te pareció?</span>
+    <div class="checks" id="fbStars" role="group" aria-label="Puntaje">${[1,2,3,4,5].map(n=>`<button type="button" class="chip" data-star="${n}" aria-pressed="false">${n} ★</button>`).join("")}</div>
+    <div class="field"><label for="fbMsg">Tu opinión</label><textarea id="fbMsg" rows="5" maxlength="2000" required placeholder="Ej: me gustó el buscador, pero no encontré..."></textarea></div>
+    <div class="field"><label for="fbContact">Tu nombre o contacto (opcional)</label><input id="fbContact" maxlength="120"></div>
+    <button class="btn" type="submit" id="fbSend" style="align-self:flex-start">Enviar</button><p class="note" id="fbOut" hidden></p></form>`;
+  }
+  if(k==="faq"){
+    h=`${back}<h2>Preguntas frecuentes</h2><p class="note">Respuestas generales y orientativas. Cada mascota es distinta: ante la duda, consultá a tu veterinario.</p>
+    <div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><input id="faqQ" type="search" placeholder="Ej: castrar, vacunas, baño" autocomplete="off" aria-label="Buscar pregunta"></div>
+    <div class="stack" id="faqList"></div>`;
+  }
+  if(k==="plantas"){
+    const list=a=>a.map(p=>`<div class="plant"><span class="light ${p.s}" aria-hidden="true"></span><div><b>${esc(p.n)}</b> <span class="verdict ${p.s}" style="font-size:.78rem">${p.s==="si"?"Segura":p.s==="no"?"Muy tóxica":"Tóxica"}</span><p class="note" style="margin-top:4px">${esc(p.t)}</p></div></div>`).join("");
+    h=`${back}<h2>Plantas y objetos tóxicos</h2><div class="card"><h3>Plantas</h3><div>${list(PLANTS)}</div></div><div class="card"><h3>Cosas de la casa</h3><div>${list(OBJECTS)}</div></div>`;
+  }
+  if(k==="porciones"){
+    h=`${back}<h2>Calculadora de porciones</h2><p class="note">Los extras (premios, frutas, sobras) no deberían pasar del 10% de lo que come por día. Estos números son aproximados.</p>
+    <form class="card" id="calcForm"><div class="grid2"><div class="field"><label for="cSp">Especie</label><select id="cSp"><option value="perro">Perro</option><option value="gato">Gato</option></select></div>
+    <div class="field"><label for="cW">Peso (kg)</label><input id="cW" type="number" inputmode="decimal" min="0.5" max="100" step="0.1"></div></div></form>
+    <div class="card" id="calcOut"></div>`;
+  }
+  if(k==="favoritos"){
+    const fs=FOODS.filter(f=>S.favs.includes(f.n));
+    h=`${back}<h2>Favoritos</h2>${fs.length?`<div class="results">${fs.map(f=>foodCard(f,false)).join("")}</div>`:`<div class="empty">Todavía no guardaste comidas. Buscá una y tocá "Guardar en favoritos".</div>`}`;
+  }
+  if(k==="aviso"){
+    h=`${back}<h2>Aviso legal</h2><div class="card"><p>La información de Hocico es orientativa y está basada en fuentes veterinarias. No reemplaza la consulta, el diagnóstico ni el tratamiento de un veterinario.</p>
+    <p>Cada animal es distinto: lo que a uno no le hace nada a otro le puede hacer daño. Ante cualquier duda, no le des la comida y consultá a tu veterinario.</p>
+    <p>Si tu mascota comió algo peligroso, usá el botón de Emergencia y llamá a tu veterinario o a una guardia.</p>
+    <p class="note">Tus datos y los de tu mascota quedan guardados en tu celular. Solo salen de él si usás Cuidado compartido (se guarda la ficha y la medicación de esa mascota, a la que accede quien tenga el código) o si nos mandás tu opinión.</p></div>`;
+  }
+  if(k==="negocios"){
+    h=`${back}<h2>¿Tenés un local pet friendly?</h2><div class="card"><p>Si tenés una veterinaria, guardia 24 h, café o local que acepta mascotas, tienda de accesorios u obra social para mascotas, vas a poder aparecer en Hocico.</p>
+    ${CONTACT_MAIL?`<span class="lbl">Correo de contacto</span><div class="copy"><code id="mail">${CONTACT_MAIL}</code><button class="btn small" type="button" id="copyMail">Copiar</button></div>`:`<p class="note"><b>Muy pronto</b> vas a poder sumar tu local desde acá. Empezamos por Mendoza.</p>`}</div>`;
+  }
+  box.innerHTML=h; $("#subBack").addEventListener("click",closeSub);
+  if(k==="porciones"){ const p=SEL()||P()||{}; $("#cSp").value=p.sp||S.sp; if(p.w) $("#cW").value=p.w; const run=()=>calc(); $("#calcForm").addEventListener("input",run); run(); }
+  if(k==="faq") setupFaq();
+  if(k==="opinion") setupFeedback();
+  if(k==="negocios"&&$("#copyMail")) $("#copyMail").addEventListener("click",async e=>{ const b=e.target; try{ await navigator.clipboard.writeText($("#mail").textContent); b.textContent="Copiado"; }catch(err){ const r=document.createRange(); r.selectNodeContents($("#mail")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent="Seleccionado"; } setTimeout(()=>b.textContent="Copiar",1800); });
+  window.scrollTo(0,0);
+}
+function calc(){
+  const sp=$("#cSp").value, w=parseFloat($("#cW").value), out=$("#calcOut");
+  if(!(w>0)){ out.innerHTML=`<p class="note">Poné el peso para ver cuánto extra puede comer por día.</p>`; return; }
+  const rer=70*Math.pow(w,.75), daily=rer*(sp==="perro"?1.6:1.2), extra=Math.round(daily*.1);
+  out.innerHTML=`<span class="lbl">Extras por día, como máximo</span><span class="kcal">${extra} kcal</span>
+    <p class="note">Sobre unas ${Math.round(daily)} kcal diarias para ${sp==="perro"?"un perro":"un gato"} adulto de ${w} kg castrado. Cachorros, animales muy activos o con sobrepeso necesitan otros valores: consultá.</p>
+    <div class="tbl-wrap"><table><thead><tr><th>Extra</th><th style="text-align:right">kcal aprox.</th><th style="text-align:right">Por día</th></tr></thead><tbody>
+    ${TREATS.map(([n,k])=>`<tr><td>${n}</td><td class="n">${k}</td><td class="n">${Math.floor(extra/k)||"menos de 1"}</td></tr>`).join("")}</tbody></table></div>`;
+}
+function closeSub(){ curSub=null; $("#masSub").hidden=true; $("#masMenu").hidden=false; }
+$$(".tile").forEach(t=>t.addEventListener("click",()=>openSub(t.dataset.sub)));
+
+/* ===== Lugares (ejemplos inventados, no son locales reales) ===== */
+const CATS={rec:[["cafe","☕","Cafés y restós"],["parque","🌳","Parques y plazas"],["hospedaje","🏡","Hospedajes"],["paseo","🦮","Paseadores"]],
+            sal:[["vet","🩺","Veterinarias"],["guardia","🚑","Guardias 24 h"],["pelu","🛁","Peluquería y baño"],["os","📋","Obras sociales"]]};
+const PLACES=[
+ {n:"Café de ejemplo",g:"rec",c:"cafe",z:"Luján de Cuyo",t:["Agua para mascotas","Patio","Pueden entrar"],f:1},
+ {n:"Plaza de ejemplo",g:"rec",c:"parque",z:"Ciudad de Mendoza",t:["Con correa","Bolsitas","Sombra"]},
+ {n:"Cabañas de ejemplo",g:"rec",c:"hospedaje",z:"Potrerillos",t:["Perros y gatos","Patio cerrado"]},
+ {n:"Paseador de ejemplo",g:"rec",c:"paseo",z:"Chacras de Coria",t:["Grupos chicos","Turno mañana"]},
+ {n:"Veterinaria de ejemplo",g:"sal",c:"vet",z:"Luján de Cuyo",t:["Consultas","Vacunas","Acepta obra social"],f:1},
+ {n:"Guardia de ejemplo",g:"sal",c:"guardia",z:"Godoy Cruz",t:["Abierto 24 h","Internación"]},
+ {n:"Peluquería de ejemplo",g:"sal",c:"pelu",z:"Maipú",t:["Baño","Corte","Gatos también"]},
+ {n:"Obra social de ejemplo",g:"sal",c:"os",z:"Toda la provincia",t:["Cuota mensual","Red de veterinarias"]}
+];
+let grp="todos", sub=null;
+function renderPlaces(){
+  $$(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.grp===grp));
+  $("#v-lugares .proto").hidden=realPlaces;
+  const cats=grp==="todos"?[...CATS.rec,...CATS.sal]:CATS[grp];
+  $("#subcats").innerHTML=`<button class="chip" type="button" data-sub="" aria-pressed="${!sub}">Todas</button>`+cats.map(([k,i,n])=>`<button class="chip" type="button" data-sub="${k}" aria-pressed="${sub===k}">${i} ${n}</button>`).join("");
+  const all=[...CATS.rec,...CATS.sal], info=k=>all.find(x=>x[0]===k);
+  const list=PLACES.filter(p=>(grp==="todos"||p.g===grp)&&(!sub||p.c===sub)).sort((a,b)=>(b.f||0)-(a.f||0));
+  $("#placeList").innerHTML=list.length?list.map(p=>{ const [,ic,cn]=info(p.c);
+    return `<article class="place ${p.f?"feat":""}"><div class="place-top"><span class="pico ${p.g}" aria-hidden="true">${ic}</span>
+    <div style="flex:1;min-width:0"><h3>${esc(p.n)}</h3><span class="note">${cn} · ${esc(p.z)}</span></div>
+    ${p.f?`<span class="pill ft">Destacado</span>`:realPlaces?"":`<span class="pill ex">Ejemplo</span>`}</div>
+    <div class="tags">${p.t.map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div>${p.tel?`<div class="copy"><code>${esc(p.tel)}</code><a class="btn small" href="tel:${esc(p.tel.replace(/[^\d+]/g,""))}" style="text-decoration:none">Llamar</a></div>`:""}</article>`; }).join("")
+    :`<div class="empty">Todavía no hay lugares en esta categoría.</div>`;
+}
+$(".seg").addEventListener("click",e=>{ const b=e.target.closest("[data-grp]"); if(b){ grp=b.dataset.grp; sub=null; renderPlaces(); }});
+$("#subcats").addEventListener("click",e=>{ const b=e.target.closest("[data-sub]"); if(b){ sub=b.dataset.sub||null; renderPlaces(); }});
+$("#goNeg").addEventListener("click",()=>{ go("mas"); openSub("negocios"); });
+
+/* ===== QR mascota perdida ===== */
+$("#qrGen").addEventListener("click",()=>{
+  const p=P()||{}, msg=$("#qrMsg"), out=$("#qrOut"), cs=(p.contacts||[]).filter(c=>c.t);
+  if(!p.name||!cs.length){ msg.textContent="Primero completá el nombre de tu mascota y al menos un contacto, y tocá Guardar."; msg.hidden=false; out.hidden=true; return; }
+  const who=cs.map(c=>(c.n?c.n+": ":"")+c.t).join(" / ");
+  if(typeof qrcode!=="function"){ msg.textContent="No se pudo cargar el generador de QR. Revisá tu conexión y probá de nuevo."; msg.hidden=false; return; }
+  const txt=`¡Hola! Me llamo ${p.name}${p.breed?" ("+p.breed+")":""}. Si me encontraste, avisale a mi familia: ${who}. ¡Gracias! — Hocico`;
+  try{ if(qrcode.stringToBytesFuncs&&qrcode.stringToBytesFuncs["UTF-8"]) qrcode.stringToBytes=qrcode.stringToBytesFuncs["UTF-8"];
+    const q=qrcode(0,"M"); q.addData(txt); q.make();
+    out.innerHTML=`<div class="qrbox"><span class="tagline">Si me encontrás, escaneame</span><img src="${q.createDataURL(8,4)}" alt="Código QR de ${esc(p.name)}"><span style="text-align:center"><b>${esc(p.name)}</b><br>${cs.map(c=>esc((c.n?c.n+" · ":"")+c.t)).join("<br>")}</span></div>
+      <p class="note">Sacale una captura de pantalla y llevala a imprimir, o mantené apretada la imagen para guardarla. Para el collar conviene una chapita o etiqueta de 3 a 4 cm.</p>`;
+    out.hidden=false; msg.hidden=true;
+  }catch(err){ msg.textContent="No se pudo generar el QR. Probá con un texto más corto."; msg.hidden=false; }
+});
+
+/* ===== Emergencia ===== */
+function openSOS(){
+  const h=S.house, rows=[];
+  const add=(who,name,tel)=>{ if(tel) rows.push(`<div class="call"><span class="who">${who}${name?": "+esc(name):""}</span><div class="copy"><code>${esc(tel)}</code><a class="btn small" href="tel:${esc(tel.replace(/[^\d+]/g,""))}" style="text-decoration:none;background:var(--sos);border-color:var(--sos);color:#fff">Llamar</a></div></div>`); };
+  add("Mi veterinaria",h.vName,h.vTel); add("Guardia 24 h",h.gName,h.gTel);
+  S.pets.forEach(p=>add("Obra social"+(S.pets.length>1&&p.name?" de "+esc(p.name):""),p.oName&&(p.oName+(p.oNum?" · afiliado "+p.oNum:"")),p.oTel));
+  $("#calls").innerHTML = rows.length? rows.join("") :
+    `<div class="empty">Todavía no cargaste teléfonos. Agregá el de tu veterinaria y una guardia 24 h en <b>Mi mascota</b> para llamar con un toque.<br><br><button class="btn small" type="button" id="goPet">Cargar teléfonos</button></div>`;
+  const gp=$("#goPet"); if(gp) gp.addEventListener("click",()=>{ closeSOS(); go("mascota"); });
+  $("#sheet").hidden=false; $("#sheetClose").focus();
+}
+function closeSOS(){ $("#sheet").hidden=true; }
+$("#sosBtn").addEventListener("click",openSOS);
+$("#sheetClose").addEventListener("click",closeSOS);
+$("#sheet").addEventListener("click",e=>{ if(e.target.id==="sheet") closeSOS(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"&&!$("#sheet").hidden) closeSOS(); });
+
+/* ===== Navegación ===== */
+function go(t){
+  $$(".view").forEach(v=>v.hidden=v.id!=="v-"+t);
+  $$(".tab").forEach(b=>b.dataset.tab===t?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
+  if(t==="mascota") renderPet();
+  if(t==="recordatorios") renderReminders();
+  if(t==="mas") closeSub();
+  if(t==="lugares"){ renderPlaces(); loadPlaces(); }
+  window.scrollTo(0,0);
+}
+$$(".tab").forEach(b=>b.addEventListener("click",()=>go(b.dataset.tab)));
+
+/* ===== Tip del día según la estación (hemisferio sur) ===== */
+const TIPS=[
+ {s:["verano","primavera"],sp:"ambos",h:"Garrapatas y pulgas",t:"Con el calor andan por todos lados. Después de cada paseo revisale orejas, cuello, axilas y entre los dedos, y mantené la pipeta o pastilla al día."},
+ {s:["verano"],sp:"ambos",h:"Cuidado con el golpe de calor",t:"Paseá temprano o al atardecer. Si jadea muy fuerte, tiene las encías muy rojas o está decaído, llevalo a la sombra, mojale las patas con agua fresca (no helada) y llamá al veterinario."},
+ {s:["verano"],sp:"perro",h:"La prueba de la mano",t:"Apoyá la palma en el asfalto 5 segundos. Si a vos te quema, a sus almohadillas también. Buscá pasto o sombra."},
+ {s:["verano"],sp:"ambos",h:"Agua, agua y más agua",t:"Dejá varios recipientes con agua fresca a la sombra y cambiala dos veces por día. Una rodaja de sandía sin semillas es un buen extra."},
+ {s:["verano","primavera","otoño","invierno"],sp:"ambos",h:"Nunca en el auto encerrado",t:"Ni un ratito, ni con la ventanilla baja. Adentro de un auto al sol la temperatura sube muchísimo en minutos."},
+ {s:["verano"],sp:"ambos",h:"Pirotecnia en las Fiestas",t:"Muchas mascotas se escapan asustadas en Navidad y Año Nuevo. Dejalas adentro en un lugar tranquilo, con el collar y el QR de Hocico puestos."},
+ {s:["verano"],sp:"perro",h:"Ojo con la pileta",t:"No todos los perros saben nadar ni encuentran la salida. Vigilá siempre y enseñale dónde está la escalera."},
+ {s:["verano"],sp:"ambos",h:"Hocicos chatos sufren más",t:"Bulldogs, pugs, bóxers y gatos persas respiran peor con calor. Con ellos, todavía más cuidado en las horas fuertes."},
+ {s:["otoño"],sp:"ambos",h:"Vendimia y fuegos artificiales",t:"En la Fiesta de la Vendimia también hay fuegos. Lugar tranquilo, puertas cerradas y la chapita puesta."},
+ {s:["otoño","primavera"],sp:"ambos",h:"Cambio de pelo",t:"Cepillalo más seguido. En gatos ayuda mucho a evitar las bolas de pelo."},
+ {s:["otoño"],sp:"ambos",h:"No cortes la pipeta en marzo",t:"Las pulgas siguen activas hasta que llega el frío de verdad."},
+ {s:["otoño"],sp:"ambos",h:"Chequeo antes del invierno",t:"Buen momento para el control anual, sobre todo si tu mascota ya es mayor o tiene artrosis."},
+ {s:["invierno"],sp:"ambos",h:"Cama lejos del frío",t:"Los mayores y los que tienen artrosis sufren más. Una cama elevada del piso y lejos de corrientes de aire les cambia el día."},
+ {s:["invierno"],sp:"ambos",h:"Estufas y braseros",t:"Que no duerma pegado a la estufa y nunca en ambientes cerrados con brasero: el monóxido también les hace daño."},
+ {s:["invierno"],sp:"gato",h:"Golpeá el capó",t:"Con frío, los gatos se meten en el motor del auto buscando calor. Golpeá el capó antes de arrancar."},
+ {s:["invierno"],sp:"perro",h:"¿Necesita ropita?",t:"Solo si es chiquito, de pelo corto o mayor y tiembla. Que no le ajuste ni le moleste para caminar."},
+ {s:["invierno","primavera"],sp:"ambos",h:"Cuando sopla el Zonda",t:"El viento los pone nerviosos y reseca. Dejalos adentro, con agua fresca, y revisá que no puedan escaparse."},
+ {s:["invierno"],sp:"ambos",h:"Anticongelante: peligro",t:"Tiene gusto dulce y es mortal en muy poca cantidad. Limpiá cualquier mancha en la cochera."},
+ {s:["invierno"],sp:"ambos",h:"Menos paseo, menos comida",t:"Si en invierno se mueve menos, ajustá un poco la porción para que no engorde."},
+ {s:["primavera"],sp:"ambos",h:"Alergias de primavera",t:"Si se rasca mucho, se lame las patas o le lagrimean los ojos, puede ser alergia. Consultalo con tu veterinario."},
+ {s:["primavera"],sp:"ambos",h:"Temporada de celo",t:"Perras y gatas sin castrar entran en celo y se escapan más. Buen momento para hablar de castración con tu veterinario."},
+ {s:["primavera"],sp:"ambos",h:"Plantas nuevas en casa",t:"Antes de comprar plantas, revisá la lista de tóxicas en Más. Los lirios son muy peligrosos para gatos."},
+ {s:["todo"],sp:"ambos",h:"Chapita o QR siempre puesto",t:"La mayoría de las mascotas perdidas vuelven a casa cuando tienen identificación. Generá el QR en Mi mascota."},
+ {s:["todo"],sp:"ambos",h:"Nada de remedios de humanos",t:"Ibuprofeno y paracetamol son muy peligrosos para ellos. Siempre consultá al veterinario."},
+ {s:["todo"],sp:"perro",h:"Huesos del asado, no",t:"Los huesos cocidos se astillan. Si querés darle algo, un pedacito de carne magra sin sal."},
+ {s:["todo"],sp:"ambos",h:"¿Le sentís las costillas?",t:"Al pasar la mano deberías sentirlas sin apretar. Si no, puede tener sobrepeso: consultá su porción."},
+ {s:["todo"],sp:"ambos",h:"Dientes sanos",t:"El sarro trae dolor y otras enfermedades. Preguntá a tu veterinario por cepillado o premios dentales."},
+ {s:["todo"],sp:"gato",h:"El arenero habla",t:"Si tu gato deja de usarlo, va muchas veces o hace fuerza sin resultado, consultá pronto. En machos puede ser una urgencia."},
+ {s:["todo"],sp:"gato",h:"Gatos y agua",t:"Muchos gatos toman poca agua. Una fuente o varios recipientes lejos de la comida ayudan a que tomen más."}
+];
+let tipOff=0;
+function season(){ const m=new Date().getMonth()+1; return m===12||m<=2?"verano":m<=5?"otoño":m<=8?"invierno":"primavera"; }
+function renderTip(){
+  const se=season(), sp=S.sp, pool=TIPS.filter(t=>(t.sp==="ambos"||t.sp===sp)&&(t.s.includes(se)||t.s.includes("todo")));
+  const seas=pool.filter(t=>!t.s.includes("todo")), gen=pool.filter(t=>t.s.includes("todo"));
+  const mix=[]; for(let i=0;i<Math.max(seas.length,gen.length);i++){ if(seas[i]) mix.push(seas[i]); if(i%2===1&&gen[(i-1)/2]) mix.push(gen[(i-1)/2]); } gen.forEach(g=>{ if(!mix.includes(g)) mix.push(g); });
+  const day=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/864e5), t=mix[(day+tipOff)%mix.length], sel=SEL();
+  $("#tip").innerHTML=`<div class="tip-top"><span class="tip-lbl">Tip del día · ${se}${sel&&sel.name?" · para "+esc(sel.name):""}</span><button class="btn small" type="button" id="tipNext">Otro tip</button></div><p><b>${esc(t.h)}</b>${esc(t.t)}</p>`;
+  $("#tipNext").addEventListener("click",()=>{ tipOff++; renderTip(); });
+}
+
+/* ===== Conexión con la base de datos (Supabase) ===== */
+const SB_URL="https://adrtxfrzmvkdgiwigslf.supabase.co", SB_KEY="sb_publishable_2Olu1xoeQCWpCuz2ZSvvJg_uaq2tI7H";
+async function sb(path,body){
+  const r=await fetch(SB_URL+"/rest/v1/"+path,{method:body!==undefined?"POST":"GET",headers:{apikey:SB_KEY,"Content-Type":"application/json",Prefer:"return=minimal"},body:body!==undefined?JSON.stringify(body):undefined});
+  if(!r.ok) throw new Error("HTTP "+r.status); const tx=await r.text(); return tx?JSON.parse(tx):null;
+}
+const rpc=(fn,args)=>sb("rpc/"+fn,args);
+
+/* Comidas buscadas que no están */
+const logged=new Set(); let missT=null;
+function logMissing(q){ clearTimeout(missT); missT=setTimeout(()=>{ const n=norm(q); if(n.length<2||logged.has(n)) return; logged.add(n); sb("missing_searches",{q:q.trim().slice(0,80),species:S.sp}).catch(()=>{}); },1500); }
+
+/* Lugares reales */
+let placesLoaded=false, realPlaces=false;
+async function loadPlaces(){
+  if(placesLoaded) return; placesLoaded=true;
+  try{ const rows=await sb("places?select=name,grp,cat,zone,tags,phone,featured&order=featured.desc,name.asc");
+    if(rows&&rows.length){ PLACES.length=0; rows.forEach(r=>PLACES.push({n:r.name,g:r.grp,c:r.cat,z:r.zone||"",t:r.tags||[],tel:r.phone||"",f:r.featured?1:0})); realPlaces=true; renderPlaces(); }
+  }catch(e){ placesLoaded=false; }
+}
+
+/* Opiniones */
+function setupFeedback(){
+  let stars=0;
+  $("#fbStars").addEventListener("click",e=>{ const b=e.target.closest("[data-star]"); if(!b) return; stars=+b.dataset.star; $$("#fbStars [data-star]").forEach(x=>x.setAttribute("aria-pressed",+x.dataset.star===stars)); });
+  $("#fbForm").addEventListener("submit",async e=>{
+    e.preventDefault(); const out=$("#fbOut"), btn=$("#fbSend"), msg=$("#fbMsg").value.trim(); if(!msg) return;
+    btn.disabled=true; btn.textContent="Enviando...";
+    try{ await sb("feedback",{rating:stars||null,message:msg.slice(0,2000),contact:$("#fbContact").value.trim().slice(0,120)||null,platform:window.Capacitor?"android":"web"});
+      $("#fbForm").innerHTML=`<h3>¡Gracias!</h3><p>Recibimos tu opinión. Nos ayuda mucho a mejorar Hocico.</p>`;
+    }catch(err){ out.textContent="No se pudo enviar. Revisá tu conexión e intentá de nuevo."; out.hidden=false; btn.disabled=false; btn.textContent="Enviar"; }
+  });
+}
+
+/* Cuidado compartido */
+const SHARED=["name","sp","sex","breed","w","age","neut","conds","oName","oNum","oTel","contacts","ctrl"];
+const fmtCode=c=>c?c.slice(0,5)+"-"+c.slice(5):"";
+function packPet(p){
+  const pet={}; SHARED.forEach(k=>pet[k]=p[k]);
+  const meds=S.meds.filter(m=>m.pid===p.id).map(m=>({id:m.id,name:m.name,dose:m.dose,times:m.times}));
+  const ids=new Set(meds.map(m=>m.id)), t=today(), dn={};
+  Object.entries(S.dn).forEach(([k,v])=>{ const [d,rest]=k.split("|"); if(d===t&&rest&&ids.has(rest.split("@")[0])) dn[k]=v; });
+  return {v:1,pet,petAt:p.updated||0,meds,medsAt:p.medsAt||0,dn};
+}
+function unpackPet(p,r){
+  if(!r) return;
+  if((r.petAt||0)>(p.updated||0)&&r.pet){ SHARED.forEach(k=>{ if(r.pet[k]!==undefined&&r.pet[k]!==null) p[k]=r.pet[k]; }); p.updated=r.petAt; }
+  if((r.medsAt||0)>(p.medsAt||0)){ S.meds=S.meds.filter(m=>m.pid!==p.id).concat((r.meds||[]).map(m=>Object.assign({},m,{pid:p.id}))); p.medsAt=r.medsAt; }
+  Object.entries(r.dn||{}).forEach(([k,v])=>{ const l=S.dn[k]; if(v&&(!l||v.t>l.t)) S.dn[k]=v; });
+}
+let syncBusy=false, syncTimer=null, syncErr=false;
+async function syncAll(){
+  const sh=S.pets.filter(p=>p.share); if(!sh.length||syncBusy) return;
+  syncBusy=true; let ok=true;
+  for(const p of sh){ try{ unpackPet(p,await rpc("share_get",{p_code:p.share})); await rpc("share_put",{p_code:p.share,p_data:packPet(p)}); p.syncAt=Date.now(); }catch(e){ ok=false; } }
+  syncBusy=false; syncErr=!ok; save();
+  if(!$("#v-recordatorios").hidden) renderReminders();
+  if(!$("#v-mascota").hidden) renderShare();
+  renderSpecies();
+}
+function syncSoon(){ clearTimeout(syncTimer); syncTimer=setTimeout(syncAll,700); }
+function renderShare(){
+  const p=P(), body=$("#shareBody"); $("#meName").value=S.me||"";
+  if(p&&p.share){
+    const when=p.syncAt?new Date(p.syncAt).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hour12:false}):"";
+    body.innerHTML=`<span class="lbl">Código de ${esc(p.name)}</span>
+      <div class="copy"><code class="code" id="shareCode">${fmtCode(p.share)}</code><button class="btn small" type="button" id="copyCode">Copiar</button></div>
+      <p class="note">Pasale este código a la otra persona. En su Hocico, en Mi mascota, toca "Tengo un código".</p>
+      <p class="note">${syncErr?"Sin conexión: se va a sincronizar cuando vuelva internet.":when?"Sincronizado a las "+when+".":"Sincronizando..."}</p>
+      <button class="btn small danger" type="button" id="unshare" style="align-self:flex-start">Dejar de compartir en este celular</button>`;
+    $("#copyCode").addEventListener("click",async e=>{ const b=e.target; try{ await navigator.clipboard.writeText(fmtCode(p.share)); b.textContent="Copiado"; }catch(err){ const r=document.createRange(); r.selectNodeContents($("#shareCode")); const s2=getSelection(); s2.removeAllRanges(); s2.addRange(r); b.textContent="Seleccionado"; } setTimeout(()=>b.textContent="Copiar",1800); });
+    let armed=false; $("#unshare").addEventListener("click",e=>{ if(!armed){ armed=true; e.target.textContent="Tocá otra vez para confirmar"; return; } delete p.share; delete p.syncAt; save(); renderShare(); });
+  } else {
+    const named=p&&p.name;
+    body.innerHTML=(named?`<button class="btn" type="button" id="doShare" style="align-self:flex-start">Compartir a ${esc(p.name)} con otra casa</button>`:`<p class="note">Para compartir, primero cargá el nombre de tu mascota y tocá Guardar.</p>`)+`
+      <div class="field" style="border-top:1px solid var(--line);padding-top:12px"><label for="joinCode">¿Te pasaron un código? (agrega la mascota de la otra casa)</label>
+      <div style="display:flex;gap:6px"><input id="joinCode" placeholder="Ej: ABCDE-FGHJK" autocapitalize="characters" style="flex:1;min-width:0"><button class="btn small" type="button" id="doJoin">Unirme</button></div></div>`;
+    if(named) $("#doShare").addEventListener("click",async e=>{ const b=e.target; b.disabled=true; b.textContent="Creando código...";
+      try{ p.updated=p.updated||Date.now(); p.medsAt=p.medsAt||Date.now(); p.share=await rpc("share_create",{p_data:packPet(p)}); p.syncAt=Date.now(); syncErr=false; save(); renderShare(); }
+      catch(err){ shareMsg("No se pudo conectar. Revisá tu internet e intentá de nuevo."); b.disabled=false; b.textContent=`Compartir a ${p.name} con otra casa`; } });
+    $("#doJoin").addEventListener("click",async e=>{ const code=$("#joinCode").value.toUpperCase().replace(/[^A-Z0-9]/g,""); if(code.length!==10){ shareMsg("El código tiene 10 letras y números, por ejemplo ABCDE-FGHJK."); return; }
+      if(S.pets.some(x=>x.share===code)){ shareMsg("Esa mascota ya está en este celular."); return; }
+      const b=e.target; b.disabled=true; b.textContent="Buscando...";
+      try{ const r=await rpc("share_get",{p_code:code}); if(!r){ shareMsg("No encontramos ese código. Revisalo y probá de nuevo."); b.disabled=false; b.textContent="Unirme"; return; }
+        const cur=P(); const np=(cur&&!cur.name&&!cur.photo)?cur:newPet(); np.share=code; np.updated=0; np.medsAt=0; unpackPet(np,r); np.syncAt=Date.now();
+        S.cur=S.pets.indexOf(np); S.sel=S.cur; S.sp=np.sp||S.sp; save(); renderPet(); renderSpecies(); shareMsg(`Listo: ya compartís a ${np.name||"tu mascota"}. Sus remedios están en Recordatorios.`);
+      }catch(err){ shareMsg("No se pudo conectar. Revisá tu internet e intentá de nuevo."); b.disabled=false; b.textContent="Unirme"; } });
+  }
+}
+function shareMsg(t){ const m=$("#shareMsg"); m.textContent=t; m.hidden=false; setTimeout(()=>m.hidden=true,6000); }
+$("#meName").addEventListener("input",e=>{ S.me=e.target.value.trim().slice(0,40); save(); });
+setInterval(()=>{ if(document.visibilityState==="visible") syncAll(); },30000);
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") syncAll(); });
+
+/* Arranque: con un ejemplo para que se vea cómo funciona */
+renderSpecies();
+$("#q").value="pastel de papa"; renderResults();
+syncAll();
+</script>
+
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+</script>
+</body>
+</html>

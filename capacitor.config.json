@@ -1,0 +1,6 @@
+{
+  "appId": "app.hocico",
+  "appName": "Hocico",
+  "webDir": "www",
+  "android": { "backgroundColor": "#f2f3e8" }
+}
