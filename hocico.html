@@ -247,6 +247,7 @@ ol.say{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
         </div>
         <div class="tip" id="tip" aria-live="polite"></div>
         <div class="results" id="results" aria-live="polite"></div>
+        <section class="card" id="fishFood" hidden></section>
         <section class="card" id="fishPanel" hidden>
           <h2>Mi pecera</h2>
           <div class="seg" id="fishSeg" role="group" aria-label="Cuidados de la pecera" style="grid-template-columns:repeat(4,1fr)">
@@ -357,6 +358,7 @@ ol.say{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
     <section class="view" id="v-recordatorios" hidden>
       <div class="stack">
         <h2>Recordatorios</h2>
+        <div class="subcats" id="remBar" role="group" aria-label="Elegí la mascota" hidden></div>
         <div class="card">
           <h3>Hoy</h3>
           <div id="today"></div>
@@ -366,7 +368,7 @@ ol.say{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
           </div>
         </div>
         <div class="card">
-          <h3>Medicación</h3>
+          <h3 id="medTitle">Medicación</h3>
           <div id="medList"></div>
           <form class="stack" id="medForm" style="gap:10px;border-top:1px solid var(--line);padding-top:12px">
             <span class="lbl">Agregar medicación</span>
@@ -380,8 +382,8 @@ ol.say{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
           </form>
         </div>
         <div class="card">
-          <h3>Vacunas y parásitos</h3>
-          <p class="note">Poné la fecha de la última vez y la app te dice cuándo toca la próxima. Los intervalos son de referencia: usá los que te indique tu veterinario.</p>
+          <h3 id="ctrlTitle">Vacunas y parásitos</h3>
+          <p class="note" id="ctrlNote">Poné la fecha de la última vez y la app te dice cuándo toca la próxima. Los intervalos son de referencia: usá los que te indique tu veterinario.</p>
           <div id="ctrlList"></div>
         </div>
       </div>
@@ -770,10 +772,23 @@ function foodCard(f,open){
 }
 
 /* ===== Pecera ===== */
+function fishOf(p){ return p&&p.sp==="pez"&&p.breed?FISH.find(f=>norm(f.n+" "+f.k).split(" ").some(w=>w.length>3&&norm(p.breed).includes(w))):null; }
+const FISH_DIET=[
+ ["si","Todos los días",["Escamas o pellets, del tamaño de su boca","Pastillas de fondo para los que comen abajo, como las corydoras"]],
+ ["cuidado","De vez en cuando, como premio",["Artemia o larvas, congeladas o vivas (compradas en tienda)","Arveja hervida, pelada y aplastada","Zapallito, lechuga o espinaca escaldada, solo para los que comen vegetales (goldfish, molly, platy)"]],
+ ["no","Nunca",["Pan, galletitas y harinas","Fruta, incluida la sandía","Carne, pollo, fiambre y huevo","Arroz y fideos","Alimento de perro, gato o tortuga","Lombrices o bichos juntados en el jardín"]]
+];
+function renderFishFood(){
+  const sel=SEL(), sp=fishOf(sel), nm=sel&&sel.sp==="pez"&&sel.name?esc(sel.name):"";
+  $("#fishFood").innerHTML=`<h2>Qué darle de comer</h2>`
+   +(sp?`<div class="alert pers"><span>🐟</span><span><b>Para ${nm} (${esc(sp.n.split(" (")[0])}):</b> ${esc(sp.food)}</span></div>`:"")
+   +FISH_DIET.map(([st,t,items])=>`<div class="plant"><span class="light ${st}" aria-hidden="true" style="margin-top:6px"></span><div><b>${t}</b><ul style="margin:4px 0 0;padding-left:1.1em;display:flex;flex-direction:column;gap:2px">${items.map(i=>`<li>${esc(i)}</li>`).join("")}</ul></div></div>`).join("")
+   +`<p class="note" style="padding-top:10px;border-top:1px solid var(--line)"><b>Cuánto:</b> lo que coma en 2 minutos, 1 o 2 veces por día. Lo que sobra ensucia el agua. Un día de ayuno por semana está bien.</p>`;
+}
 let ftab="esp";
 function renderFish(){
   $$("#fishSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ft===ftab));
-  const sel=SEL(), mine=sel&&sel.sp==="pez"&&sel.breed?FISH.find(f=>norm(f.n+" "+f.k).split(" ").some(w=>w.length>3&&norm(sel.breed).includes(w))):null;
+  const sel=SEL(), mine=fishOf(sel);
   const light=(st,lbl)=>`<span class="light ${st}" aria-hidden="true" style="margin-top:6px"></span>`;
   let h="";
   if(ftab==="esp"){
@@ -810,11 +825,12 @@ function renderSpecies(){
   const pets=S.pets.map((p,i)=>p.name?`<button class="chip" type="button" data-selpet="${i}" aria-pressed="${S.sel===i}">${p.photo?`<img class="mini" src="${p.photo}" alt="">`:emo(p.sp)} ${esc(p.name)}</button>`:"").join("");
   $(".species").innerHTML=pets+`<button class="chip" type="button" data-sp="perro" aria-pressed="${!sel&&S.sp==="perro"}">🐶 Perro</button><button class="chip" type="button" data-sp="gato" aria-pressed="${!sel&&S.sp==="gato"}">🐱 Gato</button><button class="chip" type="button" data-sp="pez" aria-pressed="${!sel&&S.sp==="pez"}">🐟 Pez</button>`;
   const fish=S.sp==="pez";
-  $("#heroTitle").textContent=fish?`¿Qué puede comer ${sel&&sel.name?sel.name:"tu pez"}?`:sel&&sel.name?`¿Qué quiere comer ${sel.name}?`:"¿Qué quiere comer tu mascota?";
+  $("#heroTitle").textContent=fish?`¿Qué le doy de comer a ${sel&&sel.name?sel.name:"mi pez"}?`:sel&&sel.name?`¿Qué quiere comer ${sel.name}?`:"¿Qué quiere comer tu mascota?";
   $("#q").placeholder=fish?"Ej: escamas, arveja, pan":"Ej: pastel de papa, uvas, zapallo";
   $("#hint").textContent=fish?"Buscá qué le podés dar y, más abajo, todo para cuidar tu pecera.":"Escribí aunque sea con faltas: \"sandia\", \"chocolat\" o \"milaneza\" también funcionan.";
   $("#quick").innerHTML=(fish?QUICK_FISH:QUICK).map(x=>`<button type="button">${x}</button>`).join("");
-  $("#fishPanel").hidden=!fish; if(fish) renderFish();
+  $(".hero .search").hidden=fish; $("#hint").hidden=fish; $("#quick").hidden=fish; $("#results").hidden=fish;
+  $("#fishFood").hidden=!fish; $("#fishPanel").hidden=!fish; if(fish){ renderFishFood(); renderFish(); }
   renderTip();
 }
 function renderResults(){
@@ -923,11 +939,20 @@ const today=()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMon
 function renderReminders(){
   const t=today();
   Object.keys(S.dn).forEach(k=>{ if(!k.startsWith(t)) delete S.dn[k]; });
-  const named=S.pets.filter(p=>p.name), multi=named.length>1;
+  const named=S.pets.filter(p=>p.name), multi=false;
+  const cur=named.find(p=>p.id===S.remPet)||(SEL()&&SEL().name?SEL():null)||named[0]||null;
+  if(cur) S.remPet=cur.id;
+  $("#remBar").hidden=named.length<2;
+  $("#remBar").innerHTML=named.map(p=>`<button class="chip" type="button" data-rem="${p.id}" aria-pressed="${!!cur&&p.id===cur.id}">${p.photo?`<img class="mini" src="${p.photo}" alt="">`:emo(p.sp)} ${esc(p.name)}</button>`).join("");
   $("#mPet").innerHTML=named.map(p=>`<option value="${p.id}">${esc(p.name)}</option>`).join("");
-  $("#mPetWrap").hidden=!named.length;
-  const tag=m=>multi&&m.pid?`<span class="petname">${esc(petName(m.pid))}</span> · `:"";
-  const doses=[]; S.meds.forEach(m=>m.times.forEach(h=>doses.push({h,m,key:t+"|"+m.id+"@"+h})));
+  $("#mPetWrap").hidden=true; if(cur) $("#mPet").value=cur.id;
+  const mine=m=>!cur||!m.pid||m.pid===cur.id;
+  const tag=m=>"";
+  $("#medTitle").textContent=cur?`Medicación de ${cur.name}`:"Medicación";
+  const fishP=cur&&cur.sp==="pez";
+  $("#ctrlTitle").textContent=fishP?"Cuidados de la pecera":"Vacunas y parásitos";
+  $("#ctrlNote").textContent=fishP?"Poné la fecha de la última vez y la app te dice cuándo toca la próxima.":"Poné la fecha de la última vez y la app te dice cuándo toca la próxima. Los intervalos son de referencia: usá los que te indique tu veterinario.";
+  const doses=[]; S.meds.filter(mine).forEach(m=>m.times.forEach(h=>doses.push({h,m,key:t+"|"+m.id+"@"+h})));
   doses.sort((a,b)=>a.h.localeCompare(b.h));
   const st=k=>S.dn[k]&&S.dn[k].v?S.dn[k]:null;
   const hhmm=ms=>new Date(ms).toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit",hour12:false});
@@ -936,9 +961,9 @@ function renderReminders(){
     return `<div class="dose ${dn?"done":""}"><time>${esc(d.h)}</time><div class="what">${tag(d.m)}<b>${esc(d.m.name)}</b><br><span class="note">${sub}</span></div>
     <button class="tick" type="button" data-dose="${esc(d.key)}" data-pid="${esc(d.m.pid||"")}" aria-label="${dn?"Marcar como no dada":"Marcar como dada"}">${dn?"✓":""}</button></div>`; }).join("")
     : `<p class="note">No hay tomas cargadas. Agregá una medicación abajo.</p>`;
-  $("#medList").innerHTML = S.meds.length ? S.meds.map(m=>`<div class="med"><div>${tag(m)}<b>${esc(m.name)}</b> <span class="note">${esc(m.dose||"")}</span><br><span class="note">${m.times.map(esc).join(" · ")}</span></div><button class="btn small danger" type="button" data-delmed="${esc(m.id)}">Quitar</button></div>`).join("")
+  $("#medList").innerHTML = S.meds.filter(mine).length ? S.meds.filter(mine).map(m=>`<div class="med"><div>${tag(m)}<b>${esc(m.name)}</b> <span class="note">${esc(m.dose||"")}</span><br><span class="note">${m.times.map(esc).join(" · ")}</span></div><button class="btn small danger" type="button" data-delmed="${esc(m.id)}">Quitar</button></div>`).join("")
     : `<p class="note">Sin medicación cargada.</p>`;
-  $("#ctrlList").innerHTML = named.length ? named.map(p=>{ p.ctrl=p.ctrl||{};
+  $("#ctrlList").innerHTML = cur ? [cur].map(p=>{ p.ctrl=p.ctrl||{};
     return (multi?`<h3 class="petname" style="margin-top:8px">${esc(p.name)}</h3>`:"")+(p.sp==="pez"?FISH_CTRL:CONTROLS).map(c=>{ const last=p.ctrl[c.id]; let pill="";
     if(last){ const next=new Date(last+"T12:00"); next.setDate(next.getDate()+c.days); const diff=Math.round((next-new Date())/864e5);
       const nx=next.toLocaleDateString("es-AR",{day:"numeric",month:"short"});
@@ -954,6 +979,7 @@ function renderReminders(){
     $("#shareDay").href="https://wa.me/?text="+encodeURIComponent(`Tomas de hoy, ${fecha}:\n`+lines.join("\n")+"\n\nEnviado desde Hocico");
   }
 }
+$("#remBar").addEventListener("click",e=>{ const b=e.target.closest("[data-rem]"); if(b){ S.remPet=b.dataset.rem; save(); renderReminders(); } });
 function touchMeds(pid){ const p=S.pets.find(x=>x.id===pid); if(p){ p.medsAt=Date.now(); if(p.share) syncSoon(); } }
 $("#medForm").addEventListener("submit",e=>{
   e.preventDefault();
