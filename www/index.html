@@ -249,16 +249,27 @@ ol.say{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
           <div class="species" role="group" aria-label="Especie">
             <button class="chip" type="button" data-sp="perro" aria-pressed="true">🐶 Perro</button>
             <button class="chip" type="button" data-sp="gato" aria-pressed="false">🐱 Gato</button>
+            <button class="chip" type="button" data-sp="pez" aria-pressed="false">🐟 Pez</button>
           </div>
           <div class="search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
             <input id="q" type="search" placeholder="Ej: pastel de papa, uvas, zapallo" autocomplete="off" aria-label="Buscar comida">
           </div>
-          <p class="hint">Escribí aunque sea con faltas: "sandia", "chocolat" o "milaneza" también funcionan.</p>
+          <p class="hint" id="hint">Escribí aunque sea con faltas: "sandia", "chocolat" o "milaneza" también funcionan.</p>
           <div class="quick" id="quick"></div>
         </div>
         <div class="tip" id="tip" aria-live="polite"></div>
         <div class="results" id="results" aria-live="polite"></div>
+        <section class="card" id="fishPanel" hidden>
+          <h2>Mi pecera</h2>
+          <div class="seg" id="fishSeg" role="group" aria-label="Cuidados de la pecera" style="grid-template-columns:repeat(4,1fr)">
+            <button type="button" data-ft="esp" aria-pressed="true">Especies</button>
+            <button type="button" data-ft="mant" aria-pressed="false">Limpieza</button>
+            <button type="button" data-ft="prod" aria-pressed="false">Químicos</button>
+            <button type="button" data-ft="alert" aria-pressed="false">Alertas</button>
+          </div>
+          <div id="fishBody" class="stack" style="gap:0"></div>
+        </section>
       </div>
     </section>
 
@@ -279,8 +290,9 @@ ol.say{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:4px}
           </div>
           <div class="grid2">
             <div class="field"><label for="pName">Nombre</label><input id="pName" placeholder="Ej: Luna"></div>
-            <div class="field"><label for="pSp">Especie</label><select id="pSp"><option value="perro">Perro</option><option value="gato">Gato</option></select></div>
-            <div class="field" style="grid-column:1/-1"><label for="pBreed">Raza</label><input id="pBreed" placeholder="Ej: Pitbull o Mestizo"></div>
+            <div class="field"><label for="pSp">Especie</label><select id="pSp"><option value="perro">Perro</option><option value="gato">Gato</option><option value="pez">Pez</option></select></div>
+            <div class="field" style="grid-column:1/-1"><label for="pBreed" id="pBreedLbl">Raza</label><input id="pBreed" placeholder="Ej: Pitbull o Mestizo" list="fishList"><datalist id="fishList"></datalist></div>
+            <div class="field" id="tankField" hidden><label for="pTank">Litros de la pecera</label><input id="pTank" type="number" inputmode="numeric" min="1" max="5000" placeholder="Ej: 60"></div>
             <div class="field"><label for="pW">Peso (kg)</label><input id="pW" type="number" inputmode="decimal" min="0.3" max="100" step="0.1" placeholder="Ej: 22"></div>
             <div class="field"><label for="pAge">Edad (años)</label><input id="pAge" type="number" inputmode="decimal" min="0" max="30" step="0.5" placeholder="Ej: 4"></div>
             <div class="field"><label for="pSex">Sexo</label><select id="pSex"><option value="">Elegir</option><option value="macho">Macho</option><option value="hembra">Hembra</option></select></div>
@@ -621,6 +633,70 @@ const OBJECTS = [
  {n:"Anticongelante del auto",s:"no",t:"Tiene gusto dulce y es mortal en poca cantidad."},
  {n:"Lavandina y productos de limpieza",s:"cuidado",t:"Guardalos cerrados. Dejá secar el piso antes de que pase tu mascota."}
 ];
+const FISH_CTRL=[
+ {id:"agua",n:"Cambio parcial de agua (20 a 25%)",days:7},
+ {id:"vidrio",n:"Limpiar vidrios y sifonear el fondo",days:7},
+ {id:"test",n:"Test de agua (amoníaco, nitritos, nitratos)",days:14},
+ {id:"filtro",n:"Enjuagar el filtro con agua de la pecera",days:30}
+];
+const FISH=[
+ {n:"Goldfish (pez dorado, cometa, oranda)",k:"goldfish dorado cometa oranda burbuja telescopio carpa dorada",agua:"Fría",temp:"18 a 22 °C (sin calefactor)",ph:"7 a 8",lit:"80 L para el primero y 40 L más por cada uno",size:"15 a 20 cm (los cometa, más)",conv:"Con otros goldfish. No con peces tropicales.",food:"Escamas o pellets para goldfish, y de vez en cuando arvejas hervidas peladas.",ojo:"Ensucian mucho el agua: necesitan buen filtro. La pecera redonda sin filtro les acorta mucho la vida."},
+ {n:"Betta (luchador)",k:"betta luchador beta",agua:"Tropical",temp:"24 a 28 °C (con calefactor)",ph:"6,5 a 7,5",lit:"20 L o más, con filtro suave",size:"6 a 7 cm",conv:"Un solo macho por pecera. No con guppys ni peces de aletas largas.",food:"Pellets para betta, 2 o 3 por toma. Artemia o larvas de premio.",ojo:"Respira aire de la superficie: dejá espacio arriba y una tapa, porque salta."},
+ {n:"Guppy",k:"guppy gupi gupy",agua:"Tropical",temp:"22 a 28 °C",ph:"7 a 8",lit:"40 L para un grupo chico",size:"3 a 6 cm",conv:"Muy pacíficos. Mejor 2 o 3 hembras por cada macho.",food:"Escamas finas y artemia.",ojo:"Se reproducen muchísimo: en poco tiempo vas a tener crías."},
+ {n:"Platy y Molly",k:"platy plati molly moli",agua:"Tropical",temp:"22 a 28 °C",ph:"7 a 8,5",lit:"60 L",size:"5 a 10 cm",conv:"Tranquilos, buenos para peceras comunitarias.",food:"Escamas con algo de vegetal (zapallito escaldado).",ojo:"También tienen crías seguido. Los molly prefieren agua algo dura."},
+ {n:"Neón tetra",k:"neon tetra neones cardenal",agua:"Tropical",temp:"22 a 26 °C",ph:"6 a 7",lit:"60 L",size:"3 a 4 cm",conv:"En grupo de 6 o más. No con peces grandes, que se los comen.",food:"Escamas finas o micro pellets.",ojo:"Sensibles a los cambios bruscos: agregalos cuando la pecera ya esté madura."},
+ {n:"Corydora",k:"corydora coridora cory limpiafondo limpia fondo",agua:"Tropical",temp:"22 a 26 °C",ph:"6,5 a 7,5",lit:"60 L",size:"4 a 7 cm",conv:"En grupo de 5 o más. Muy pacíficas.",food:"Pastillas de fondo. No viven solo de las sobras.",ojo:"Fondo de arena fina: la grava filosa les lastima los bigotes. Toleran mal la sal y algunos medicamentos."},
+ {n:"Escalar (pez ángel)",k:"escalar angel pez angel",agua:"Tropical",temp:"24 a 28 °C",ph:"6,5 a 7,5",lit:"120 L, mejor alta",size:"15 cm de largo y 20 de alto",conv:"Pacíficos de jóvenes. De grandes se comen a los neones.",food:"Escamas, pellets y artemia.",ojo:"Crecen bastante: pensá la pecera para el tamaño adulto."},
+ {n:"Pez cebra (danio)",k:"cebra danio zebra",agua:"Templada o tropical",temp:"18 a 26 °C",ph:"6,5 a 7,5",lit:"40 L",size:"5 cm",conv:"En grupo de 6 o más. Muy activos.",food:"Escamas.",ojo:"Muy resistentes: buenos para empezar."},
+ {n:"Carpa koi",k:"koi carpa",agua:"Fría (estanque)",temp:"10 a 25 °C",ph:"7 a 8",lit:"Estanque de 1.000 L o más",size:"Más de 50 cm",conv:"Con otras koi o goldfish grandes.",food:"Pellets flotantes para koi.",ojo:"No son para pecera: crecen muchísimo."}
+];
+const FISH_MANT=[
+ ["Al armar la pecera","Antes de poner peces, dejala funcionando 3 a 4 semanas con el filtro andando (se llama ciclar). Así crecen las bacterias que limpian el agua. Después, sumá los peces de a pocos."],
+ ["Cada día","Dales de comer 1 o 2 veces lo que coman en 2 minutos. Mirá que todos naden bien y revisá la temperatura."],
+ ["Cada semana","Cambiá entre el 20 y el 25% del agua con un sifón, aspirando el fondo. El agua nueva, siempre con acondicionador y a la misma temperatura. Nunca cambies toda el agua de golpe."],
+ ["Cada semana","Limpiá los vidrios con un raspador o una esponja nueva que nunca haya tocado jabón."],
+ ["Cada 2 a 4 semanas","Enjuagá el material del filtro en un balde con agua sacada de la pecera. Con agua de la canilla se mueren las bacterias buenas. No cambies todo el material junto."],
+ ["Cada 2 semanas","Hacé un test de agua: amoníaco y nitritos tienen que estar en 0, y los nitratos, por debajo de 40 mg/L. Al principio, mejor cada semana."],
+ ["Siempre","Luz de 8 a 10 horas por día y lejos del sol directo (calienta el agua y llena de algas). Nada de aerosoles, humo o jabón cerca."]
+];
+const FISH_PROD=[
+ ["si","Acondicionador (anticloro)","Siempre, cada vez que agregás agua de la canilla. El agua de red tiene cloro, que daña las branquias."],
+ ["si","Bacterias para acuario","Ayudan a ciclar una pecera nueva y después de limpiezas grandes."],
+ ["si","Kit de test de agua","La única forma de saber si el agua está bien aunque se vea limpia."],
+ ["cuidado","Sal para acuario","Sirve para algunos tratamientos y algunos peces, pero corydoras, neones y plantas la toleran mal. Nunca uses sal de mesa con yodo."],
+ ["cuidado","Reguladores de pH","Los cambios bruscos de pH matan más que un pH \"imperfecto\". Mejor estable que perfecto."],
+ ["cuidado","Medicamentos (azul de metileno, verde de malaquita, antiparasitarios)","Solo cuando sabés qué tiene. Sacá el carbón activado del filtro mientras dure el tratamiento y consultá en una tienda de acuarismo o con un veterinario de exóticos."],
+ ["cuidado","Clarificadores y antialgas","Tapan el problema sin resolverlo: casi siempre la causa es mucha comida o mucha luz."],
+ ["no","Jabón, lavandina o detergente","Nunca en nada que toque la pecera: ni el vidrio, ni las piedras, ni el balde."],
+ ["no","Agua destilada sola o agua de lluvia","No tienen los minerales que los peces necesitan, o traen contaminantes."]
+];
+const FISH_ALERT=[
+ ["no","Boquea en la superficie","Falta de oxígeno o amoníaco alto. Cambiá un 30% del agua con acondicionador, revisá que el filtro y el aireador funcionen, y hacé un test."],
+ ["no","Escamas paradas como una piña u ojos saltones","Infección grave (hidropesía). Separalo y consultá pronto."],
+ ["cuidado","Puntitos blancos como sal","Es un parásito muy común (punto blanco). Necesita tratamiento específico. Consultá en una tienda de acuarismo."],
+ ["cuidado","Aletas deshilachadas o comidas","Agua sucia o mordidas de otros peces. Revisá el agua y quién convive con él."],
+ ["cuidado","Pelusa blanca como algodón","Hongos, que suelen aparecer con heridas o agua en mal estado."],
+ ["cuidado","Nada de costado, flota o no puede bajar","Problema de vejiga natatoria. Dejalo 2 o 3 días sin comer y después dale una arveja hervida pelada (sobre todo goldfish)."],
+ ["cuidado","Se esconde y no come","Estrés, peces agresivos o agua en mal estado. Hacé un test."],
+ ["cuidado","Agua turbia blanca","Exceso de comida o pecera nueva sin ciclar. Menos comida y cambios parciales."],
+ ["si","Agua verde","Algas por mucha luz o mucha comida. Reducí horas de luz y comida. No suele ser peligroso."]
+];
+const FISH_FOODS=[
+ {n:"Escamas para peces",a:"escamas alimento comida para peces balanceado tetra",c:"Alimento",pez:["si","Es la base de la dieta de la mayoría. Dale lo que coma en 2 minutos, 1 o 2 veces por día."]},
+ {n:"Pellets o granulado",a:"pellets granulado gránulos bolitas",c:"Alimento",pez:["si","Muy bueno, elegí el tamaño según la boca del pez. A los goldfish conviene remojarlos unos segundos antes."]},
+ {n:"Pastillas de fondo",a:"pastillas de fondo tabletas corydora",c:"Alimento",pez:["si","Para los que comen en el fondo, como las corydoras."]},
+ {n:"Artemia y larvas",a:"artemia larvas larva de mosquito tubifex daphnia congelado vivo",c:"Alimento",pez:["si","Excelente como complemento, congeladas o vivas, 1 o 2 veces por semana. Compralas en tiendas: las juntadas a mano pueden traer parásitos."]},
+ {n:"Arveja hervida pelada",a:"arveja arvejas guisante",c:"Verduras",pez:["si","Sin cáscara y aplastada, ayuda con la digestión, sobre todo a los goldfish. Sacá lo que sobre."]},
+ {n:"Zapallito, lechuga o espinaca escaldada",a:"zapallito zucchini lechuga espinaca pepino verduras",c:"Verduras",pez:["cuidado","Para peces que comen vegetales (goldfish, molly, platy). Hervida unos segundos, en trocitos, y sacá los restos a las pocas horas para que no ensucie."]},
+ {n:"Fruta",a:"fruta banana manzana naranja",c:"Verduras",pez:["cuidado","Casi ningún pez de pecera la necesita, y ensucia mucho el agua. Mejor no."]},
+ {n:"Huevo duro",a:"huevo yema",c:"Otros",pez:["cuidado","Antes se usaba para alevines, pero ensucia muchísimo el agua. Hoy hay alimento para crías."]},
+ {n:"Pan y galletitas",a:"pan galletitas galletas miga harina",c:"Otros",pez:["no","Se hincha, no lo digieren bien y pudre el agua."]},
+ {n:"Alimento de perro o gato",a:"alimento de perro alimento de gato balanceado comida de perro comida de gato",c:"Otros",pez:["no","Demasiada grasa y proteína para ellos. Ensucia el agua."]},
+ {n:"Carne, pollo o fiambre",a:"carne pollo jamon fiambre salchicha",c:"Otros",pez:["no","Grasa y sal. No están hechos para eso y pudre el agua."]},
+ {n:"Arroz y fideos",a:"arroz fideos pasta",c:"Otros",pez:["no","No los digieren bien y ensucian el agua."]},
+ {n:"Lombrices del jardín",a:"lombriz lombrices gusanos",c:"Otros",pez:["cuidado","Pueden traer pesticidas o parásitos. Si querés comida viva, mejor comprarla en una tienda."]},
+ {n:"Alimento de tortuga",a:"tortuga alimento de tortuga",c:"Otros",pez:["cuidado","No está balanceado para peces. Si comen un poco no pasa nada, pero no como costumbre."]}
+];
 const CONTROLS = [
  {id:"vac",n:"Vacuna anual",days:365},
  {id:"des",n:"Desparasitación interna",days:90},
@@ -659,12 +735,12 @@ const SNOUT='<svg viewBox="0 0 64 64"><path d="M12 38c0-10 9-18 20-18s20 8 20 18
 
 /* ===== Búsqueda tolerante a faltas ===== */
 function lev(a,b){ if(Math.abs(a.length-b.length)>2) return 9; const d=[...Array(b.length+1).keys()]; for(let i=1;i<=a.length;i++){ let p=d[0]; d[0]=i; for(let j=1;j<=b.length;j++){ const t=d[j]; d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1)); p=t; } } return d[b.length]; }
-FOODS.forEach(f=>{ f.nn=norm(f.n); f.words=norm(f.n+" "+f.a).split(" "); f.hay=norm(f.n+" "+f.a); });
+[...FOODS,...FISH_FOODS].forEach(f=>{ f.nn=norm(f.n); f.words=norm(f.n+" "+f.a).split(" "); f.hay=norm(f.n+" "+f.a); });
 function search(q){
   q=norm(q).replace(/s\b/g,""); if(!q) return [];
   const STOP=["de","la","el","los","las","con","sin","y","un","una","del","al","mi","puede","comer"];
   const qw=q.split(" ").filter(w=>w.length>1&&!STOP.includes(w));
-  const scored=FOODS.map(f=>{
+  const scored=(S.sp==="pez"?FISH_FOODS:FOODS).map(f=>{
     let sc=0;
     if(f.hay.includes(q)) sc+=10;
     qw.forEach(w=>{ let best=0; f.words.forEach(fw=>{ const fw2=fw.replace(/s$/,""); if(fw2===w) best=Math.max(best,6); else if(fw2.startsWith(w)||w.startsWith(fw2)&&fw2.length>2) best=Math.max(best,4); else { const tol=w.length>6?2:w.length>3?1:0; if(tol&&lev(w,fw2)<=tol) best=Math.max(best,3); } }); sc+=best; if(best&&norm(f.n).includes(w)) sc+=2; });
@@ -677,7 +753,7 @@ function search(q){
 /* ===== Personalización según el perfil ===== */
 function personal(f,st){
   const p=SEL(); if(!p) return "";
-  if(p.sp && p.sp!==S.sp) return "";
+  if(S.sp==="pez"||(p.sp && p.sp!==S.sp)) return "";
   const out=[], c=p.conds||[], nm=esc(p.name||"tu mascota");
   if(st!=="no"){
     if(f.sugar&&c.includes("diabetes")) out.push(`<b>${nm} tiene diabetes:</b> esta comida tiene azúcar. Mejor evitarla o consultá antes.`);
@@ -702,16 +778,56 @@ function foodCard(f,open){
     <div class="food-body" ${open?"":"hidden"}>
       <p>${esc(txt)}</p>${personal(f,st)}
       <div class="row-actions"><button class="btn small ghost" type="button" data-fav="${esc(f.n)}">${fav?"★ En favoritos":"☆ Guardar en favoritos"}</button>
-      ${st==="no"?`<button class="btn small danger" type="button" data-sos>¿Ya lo comió? Emergencia</button>`:""}</div>
+      ${st==="no"&&S.sp!=="pez"?`<button class="btn small danger" type="button" data-sos>¿Ya lo comió? Emergencia</button>`:""}</div>
     </div></article>`;
 }
 
+/* ===== Pecera ===== */
+let ftab="esp";
+function renderFish(){
+  $$("#fishSeg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.ft===ftab));
+  const sel=SEL(), mine=sel&&sel.sp==="pez"&&sel.breed?FISH.find(f=>norm(f.n+" "+f.k).split(" ").some(w=>w.length>3&&norm(sel.breed).includes(w))):null;
+  const light=(st,lbl)=>`<span class="light ${st}" aria-hidden="true" style="margin-top:6px"></span>`;
+  let h="";
+  if(ftab==="esp"){
+    const list=mine?[mine,...FISH.filter(f=>f!==mine)]:FISH;
+    h=list.map(f=>`<details class="faq"${f===mine?" open":""}><summary><span>${esc(f.n)}<br><span class="faqsp">${f===mine?"Tu pez · ":""}Agua ${esc(f.agua.toLowerCase())}</span></span></summary>
+      <div class="ans"><div class="tbl-wrap"><table><tbody>
+      <tr><th>Temperatura</th><td>${esc(f.temp)}</td></tr><tr><th>pH</th><td>${esc(f.ph)}</td></tr>
+      <tr><th>Pecera mínima</th><td>${esc(f.lit)}</td></tr><tr><th>Tamaño adulto</th><td>${esc(f.size)}</td></tr>
+      <tr><th>Convivencia</th><td>${esc(f.conv)}</td></tr><tr><th>Comida</th><td>${esc(f.food)}</td></tr></tbody></table></div>
+      <p class="note"><b>Ojo:</b> ${esc(f.ojo)}</p></div></details>`).join("")
+      +`<p class="note" style="padding-top:12px">Los peces de agua salada necesitan otros cuidados que todavía no cubrimos.</p>`;
+  }
+  if(ftab==="mant"){
+    h=FISH_MANT.map(([when,t])=>`<div class="plant"><span class="pill ok" style="align-self:flex-start;white-space:nowrap">${esc(when)}</span><p>${esc(t)}</p></div>`).join("")
+      +`<button class="btn small" type="button" id="fishRem" style="align-self:flex-start;margin-top:10px">Cargar recordatorios de limpieza</button>`;
+  }
+  if(ftab==="prod"||ftab==="alert"){
+    const L=ftab==="prod"?FISH_PROD:FISH_ALERT, lab=ftab==="prod"?{si:"Usar",cuidado:"Con cuidado",no:"Nunca"}:{si:"Leve",cuidado:"Atención",no:"Urgente"};
+    h=L.map(([st,n,t])=>`<div class="plant">${light(st)}<div><b>${esc(n)}</b> <span class="verdict ${st}" style="font-size:.78rem">${lab[st]}</span><p class="note" style="margin-top:4px">${esc(t)}</p></div></div>`).join("");
+  }
+  $("#fishBody").innerHTML=h;
+  const fr=$("#fishRem"); if(fr) fr.addEventListener("click",()=>{
+    const fp=S.pets.find(x=>x.sp==="pez"&&x.name);
+    if(!fp){ go("mascota"); if(!P()||P().name){ newPet(); } P().sp="pez"; renderPet(); $("#pName").focus(); return; }
+    go("recordatorios");
+  });
+}
+$("#fishSeg").addEventListener("click",e=>{ const b=e.target.closest("[data-ft]"); if(b){ ftab=b.dataset.ft; renderFish(); } });
+
 /* ===== Inicio ===== */
+const emo=sp=>sp==="gato"?"🐱":sp==="pez"?"🐟":"🐶";
 function renderSpecies(){
   const sel=SEL();
-  const pets=S.pets.map((p,i)=>p.name?`<button class="chip" type="button" data-selpet="${i}" aria-pressed="${S.sel===i}">${p.photo?`<img class="mini" src="${p.photo}" alt="">`:(p.sp==="gato"?"🐱":"🐶")} ${esc(p.name)}</button>`:"").join("");
-  $(".species").innerHTML=pets+`<button class="chip" type="button" data-sp="perro" aria-pressed="${!sel&&S.sp==="perro"}">🐶 Perro</button><button class="chip" type="button" data-sp="gato" aria-pressed="${!sel&&S.sp==="gato"}">🐱 Gato</button>`;
-  $("#heroTitle").textContent=sel&&sel.name?`¿Qué quiere comer ${sel.name}?`:"¿Qué quiere comer tu mascota?";
+  const pets=S.pets.map((p,i)=>p.name?`<button class="chip" type="button" data-selpet="${i}" aria-pressed="${S.sel===i}">${p.photo?`<img class="mini" src="${p.photo}" alt="">`:emo(p.sp)} ${esc(p.name)}</button>`:"").join("");
+  $(".species").innerHTML=pets+`<button class="chip" type="button" data-sp="perro" aria-pressed="${!sel&&S.sp==="perro"}">🐶 Perro</button><button class="chip" type="button" data-sp="gato" aria-pressed="${!sel&&S.sp==="gato"}">🐱 Gato</button><button class="chip" type="button" data-sp="pez" aria-pressed="${!sel&&S.sp==="pez"}">🐟 Pez</button>`;
+  const fish=S.sp==="pez";
+  $("#heroTitle").textContent=fish?`¿Qué puede comer ${sel&&sel.name?sel.name:"tu pez"}?`:sel&&sel.name?`¿Qué quiere comer ${sel.name}?`:"¿Qué quiere comer tu mascota?";
+  $("#q").placeholder=fish?"Ej: escamas, arveja, pan":"Ej: pastel de papa, uvas, zapallo";
+  $("#hint").textContent=fish?"Buscá qué le podés dar y, más abajo, todo para cuidar tu pecera.":"Escribí aunque sea con faltas: \"sandia\", \"chocolat\" o \"milaneza\" también funcionan.";
+  $("#quick").innerHTML=(fish?QUICK_FISH:QUICK).map(x=>`<button type="button">${x}</button>`).join("");
+  $("#fishPanel").hidden=!fish; if(fish) renderFish();
   renderTip();
 }
 function renderResults(){
@@ -723,6 +839,7 @@ function renderResults(){
    `<div class="empty"><b>Todavía no tenemos "${esc(q)}".</b><br>Ya lo anotamos para sumarlo pronto. Mientras tanto, ante la duda no se lo des y consultá a tu veterinario.</div>`;
 }
 const QUICK=["Pastel de papa","Uvas","Zapallo","Asado","Mate","Banana","Leche","Chocolate"];
+const QUICK_FISH=["Escamas","Arveja","Pan","Artemia","Lechuga","Alimento de perro"];
 $("#quick").innerHTML=QUICK.map(x=>`<button type="button">${x}</button>`).join("");
 $("#quick").addEventListener("click",e=>{ if(e.target.tagName==="BUTTON"){ $("#q").value=e.target.textContent; renderResults(); }});
 $("#q").addEventListener("input",renderResults);
@@ -747,17 +864,27 @@ if(!S.legal) $("#legalBanner").hidden=false;
 $("#legalOk").addEventListener("click",()=>{ S.legal=true; save(); $("#legalBanner").hidden=true; });
 
 /* ===== Mascota ===== */
-const PF={pName:"name",pSp:"sp",pSex:"sex",pBreed:"breed",pW:"w",pAge:"age",pNeut:"neut",oName:"oName",oNum:"oNum",oTel:"oTel"};
+const PF={pTank:"tank",pName:"name",pSp:"sp",pSex:"sex",pBreed:"breed",pW:"w",pAge:"age",pNeut:"neut",oName:"oName",oNum:"oNum",oTel:"oTel"};
 const HF={vName:"vName",vTel:"vTel",gName:"gName",gTel:"gTel"};
 let delArmed=false;
+function fishForm(){
+  const fish=$("#pSp").value==="pez";
+  ["pW","pSex","pNeut"].forEach(id=>document.getElementById(id).closest(".field").hidden=fish);
+  $("#conds").closest(".field").hidden=fish; $("#tankField").hidden=!fish; $("#qrCard").hidden=fish;
+  $("#pBreedLbl").textContent=fish?"Tipo de pez":"Raza";
+  $("#pBreed").placeholder=fish?"Ej: Betta, Goldfish, Guppy":"Ej: Pitbull o Mestizo";
+  $("#fishList").innerHTML=fish?FISH.map(f=>`<option value="${esc(f.n)}">`).join(""):"";
+}
+document.addEventListener("change",e=>{ if(e.target.id==="pSp") fishForm(); });
 function renderPet(){
   if(!S.pets.length) newPet();
   if(!P()) S.cur=0;
   const p=P();
-  $("#petBar").innerHTML=S.pets.map((x,i)=>`<button class="chip" type="button" data-pet="${i}" aria-pressed="${i===S.cur}">${x.photo?`<img class="mini" src="${x.photo}" alt="">`:(x.sp==="gato"?"🐱":"🐶")} ${esc(x.name||"Nueva mascota")}</button>`).join("")
+  $("#petBar").innerHTML=S.pets.map((x,i)=>`<button class="chip" type="button" data-pet="${i}" aria-pressed="${i===S.cur}">${x.photo?`<img class="mini" src="${x.photo}" alt="">`:emo(x.sp)} ${esc(x.name||"Nueva mascota")}</button>`).join("")
     +`<button class="chip" type="button" data-pet="new">+ Agregar otra</button>`;
   Object.entries(PF).forEach(([id,k])=>{ const el=document.getElementById(id); if(p[k]!==undefined&&p[k]!=="") el.value=p[k]; else if(el.tagName==="SELECT") el.selectedIndex=0; else el.value=""; });
   if(!p.sp) $("#pSp").value=S.sp;
+  fishForm();
   Object.entries(HF).forEach(([id,k])=>{ document.getElementById(id).value=S.house[k]||""; });
   $$("#conds input").forEach(c=>c.checked=(p.conds||[]).includes(c.value));
   $("#avatar").innerHTML=p.photo?`<img src="${p.photo}" alt="Foto de ${esc(p.name||"tu mascota")}">`:SNOUT;
@@ -825,7 +952,7 @@ function renderReminders(){
   $("#medList").innerHTML = S.meds.length ? S.meds.map(m=>`<div class="med"><div>${tag(m)}<b>${esc(m.name)}</b> <span class="note">${esc(m.dose||"")}</span><br><span class="note">${m.times.map(esc).join(" · ")}</span></div><button class="btn small danger" type="button" data-delmed="${esc(m.id)}">Quitar</button></div>`).join("")
     : `<p class="note">Sin medicación cargada.</p>`;
   $("#ctrlList").innerHTML = named.length ? named.map(p=>{ p.ctrl=p.ctrl||{};
-    return (multi?`<h3 class="petname" style="margin-top:8px">${esc(p.name)}</h3>`:"")+CONTROLS.map(c=>{ const last=p.ctrl[c.id]; let pill="";
+    return (multi?`<h3 class="petname" style="margin-top:8px">${esc(p.name)}</h3>`:"")+(p.sp==="pez"?FISH_CTRL:CONTROLS).map(c=>{ const last=p.ctrl[c.id]; let pill="";
     if(last){ const next=new Date(last+"T12:00"); next.setDate(next.getDate()+c.days); const diff=Math.round((next-new Date())/864e5);
       const nx=next.toLocaleDateString("es-AR",{day:"numeric",month:"short"});
       pill = diff<0?`<span class="pill late">Vencida hace ${-diff} d</span>`: diff<=7?`<span class="pill soon">Toca el ${nx}</span>`:`<span class="pill ok">Próxima: ${nx}</span>`; }
@@ -886,7 +1013,10 @@ const FAQ=[
  ["Cachorros y mayores","ambos","¿La regla de \"un año igual a siete\" es cierta?","No exactamente. Envejecen mucho más rápido al principio: un perro de un año ya es como un adolescente. Y los perros grandes envejecen antes que los chicos.",""],
  ["Cachorros y mayores","ambos","¿Desde qué edad es \"mayor\"?","Muchos veterinarios consideran mayores a los perros y gatos desde los 7 u 8 años, y antes a las razas grandes. Desde ahí conviene hacer chequeos más seguido.",""],
  ["Mitos","ambos","¿Si tiene la nariz seca, tiene fiebre?","Es un mito. La nariz puede estar seca o caliente por muchas cosas, como dormir o el clima. La fiebre se mide con termómetro.",""],
- ["Urgencias","ambos","¿Cuándo es una urgencia?","Llamá ya si: le cuesta respirar, tiene convulsiones, comió algo tóxico, sangra mucho, lo atropellaron, tiene golpe de calor o no puede orinar. En perros grandes, si tiene la panza hinchada y hace arcadas sin vomitar, puede ser una torsión de estómago y es gravísimo.","Usá el botón Emergencia de arriba."]
+ ["Urgencias","ambos","¿Cuándo es una urgencia?","Llamá ya si: le cuesta respirar, tiene convulsiones, comió algo tóxico, sangra mucho, lo atropellaron, tiene golpe de calor o no puede orinar. En perros grandes, si tiene la panza hinchada y hace arcadas sin vomitar, puede ser una torsión de estómago y es gravísimo.","Usá el botón Emergencia de arriba."],
+ ["Peces","pez","¿Sirve la pecera redonda?","Para casi ningún pez. Es chica, no tiene filtro y el agua se ensucia enseguida. Hasta un betta necesita al menos 20 litros con filtro y calefactor.",""],
+ ["Peces","pez","¿Cada cuánto cambio el agua?","Una vez por semana cambiá entre el 20 y el 25%, con acondicionador y a la misma temperatura. Nunca toda junta: eso los estresa y mata a las bacterias buenas.","En Mi pecera, dentro de Comidas, podés cargar los recordatorios."],
+ ["Peces","pez","Se me murió un pez, ¿qué hago?","Sacalo enseguida, hacé un test de agua y un cambio parcial. Fijate si los demás muestran señales raras.","Mirá la pestaña Alertas en Mi pecera."]
 ];
 function setupFaq(){
   const box=$("#faqList"), inp=$("#faqQ");
@@ -894,7 +1024,7 @@ function setupFaq(){
     const q=norm(inp.value), cats=[...new Set(FAQ.map(f=>f[0]))];
     const list=FAQ.filter(f=>!q||norm(f[2]+" "+f[3]+" "+f[0]).includes(q));
     box.innerHTML=list.length?cats.map(c=>{ const it=list.filter(f=>f[0]===c); if(!it.length) return "";
-      return `<div class="card" style="gap:0"><h3 style="margin-bottom:6px">${c}</h3>${it.map(f=>`<details class="faq"${q?" open":""}><summary><span>${esc(f[2])}${f[1]!=="ambos"?`<br><span class="faqsp">${f[1]==="perro"?"Perros":"Gatos"}</span>`:""}</span></summary><div class="ans"><p>${esc(f[3])}</p>${f[4]?`<p class="note">${esc(f[4])}</p>`:""}</div></details>`).join("")}</div>`; }).join("")
+      return `<div class="card" style="gap:0"><h3 style="margin-bottom:6px">${c}</h3>${it.map(f=>`<details class="faq"${q?" open":""}><summary><span>${esc(f[2])}${f[1]!=="ambos"?`<br><span class="faqsp">${({perro:"Perros",gato:"Gatos",pez:"Peces"})[f[1]]}</span>`:""}</span></summary><div class="ans"><p>${esc(f[3])}</p>${f[4]?`<p class="note">${esc(f[4])}</p>`:""}</div></details>`).join("")}</div>`; }).join("")
       :`<div class="empty">No encontramos esa pregunta. Ante la duda, consultá a tu veterinario.</div>`;
   };
   inp.addEventListener("input",draw); draw();
@@ -933,7 +1063,7 @@ function openSub(k){
     <div class="card" id="calcOut"></div>`;
   }
   if(k==="favoritos"){
-    const fs=FOODS.filter(f=>S.favs.includes(f.n));
+    const fs=[...FOODS,...FISH_FOODS].filter(f=>f[S.sp]&&S.favs.includes(f.n));
     h=`${back}<h2>Favoritos</h2>${fs.length?`<div class="results">${fs.map(f=>foodCard(f,false)).join("")}</div>`:`<div class="empty">Todavía no guardaste comidas. Buscá una y tocá "Guardar en favoritos".</div>`}`;
   }
   if(k==="aviso"){
@@ -947,7 +1077,7 @@ function openSub(k){
     ${CONTACT_MAIL?`<span class="lbl">Correo de contacto</span><div class="copy"><code id="mail">${CONTACT_MAIL}</code><button class="btn small" type="button" id="copyMail">Copiar</button></div>`:`<p class="note"><b>Muy pronto</b> vas a poder sumar tu local desde acá. Empezamos por Mendoza.</p>`}</div>`;
   }
   box.innerHTML=h; $("#subBack").addEventListener("click",closeSub);
-  if(k==="porciones"){ const p=SEL()||P()||{}; $("#cSp").value=p.sp||S.sp; if(p.w) $("#cW").value=p.w; const run=()=>calc(); $("#calcForm").addEventListener("input",run); run(); }
+  if(k==="porciones"){ const p=SEL()||P()||{}; $("#cSp").value=(p.sp||S.sp)==="gato"?"gato":"perro"; if(p.w) $("#cW").value=p.w; const run=()=>calc(); $("#calcForm").addEventListener("input",run); run(); }
   if(k==="faq") setupFaq();
   if(k==="opinion") setupFeedback();
   if(k==="negocios"&&$("#copyMail")) $("#copyMail").addEventListener("click",async e=>{ const b=e.target; try{ await navigator.clipboard.writeText($("#mail").textContent); b.textContent="Copiado"; }catch(err){ const r=document.createRange(); r.selectNodeContents($("#mail")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent="Seleccionado"; } setTimeout(()=>b.textContent="Copiar",1800); });
@@ -980,7 +1110,7 @@ const PLACES=[
 ];
 let grp="todos", sub=null;
 function renderPlaces(){
-  $$(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.grp===grp));
+  $$("#v-lugares .seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.grp===grp));
   $("#v-lugares .proto").hidden=realPlaces;
   const cats=grp==="todos"?[...CATS.rec,...CATS.sal]:CATS[grp];
   $("#subcats").innerHTML=`<button class="chip" type="button" data-sub="" aria-pressed="${!sub}">Todas</button>`+cats.map(([k,i,n])=>`<button class="chip" type="button" data-sub="${k}" aria-pressed="${sub===k}">${i} ${n}</button>`).join("");
@@ -993,7 +1123,7 @@ function renderPlaces(){
     <div class="tags">${p.t.map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div>${p.tel?`<div class="copy"><code>${esc(p.tel)}</code><a class="btn small" href="tel:${esc(p.tel.replace(/[^\d+]/g,""))}" style="text-decoration:none">Llamar</a></div>`:""}</article>`; }).join("")
     :`<div class="empty">Todavía no hay lugares en esta categoría.</div>`;
 }
-$(".seg").addEventListener("click",e=>{ const b=e.target.closest("[data-grp]"); if(b){ grp=b.dataset.grp; sub=null; renderPlaces(); }});
+$("#v-lugares .seg").addEventListener("click",e=>{ const b=e.target.closest("[data-grp]"); if(b){ grp=b.dataset.grp; sub=null; renderPlaces(); }});
 $("#subcats").addEventListener("click",e=>{ const b=e.target.closest("[data-sub]"); if(b){ sub=b.dataset.sub||null; renderPlaces(); }});
 $("#goNeg").addEventListener("click",()=>{ go("mas"); openSub("negocios"); });
 
@@ -1071,12 +1201,20 @@ const TIPS=[
  {s:["todo"],sp:"ambos",h:"¿Le sentís las costillas?",t:"Al pasar la mano deberías sentirlas sin apretar. Si no, puede tener sobrepeso: consultá su porción."},
  {s:["todo"],sp:"ambos",h:"Dientes sanos",t:"El sarro trae dolor y otras enfermedades. Preguntá a tu veterinario por cepillado o premios dentales."},
  {s:["todo"],sp:"gato",h:"El arenero habla",t:"Si tu gato deja de usarlo, va muchas veces o hace fuerza sin resultado, consultá pronto. En machos puede ser una urgencia."},
- {s:["todo"],sp:"gato",h:"Gatos y agua",t:"Muchos gatos toman poca agua. Una fuente o varios recipientes lejos de la comida ayudan a que tomen más."}
+ {s:["todo"],sp:"gato",h:"Gatos y agua",t:"Muchos gatos toman poca agua. Una fuente o varios recipientes lejos de la comida ayudan a que tomen más."},
+ {s:["verano"],sp:"pez",h:"Pecera y calor",t:"En verano el agua se calienta y tiene menos oxígeno. Alejá la pecera del sol, dejá la tapa entreabierta y sumá aireador si los ves boquear."},
+ {s:["verano"],sp:"pez",h:"Cortes de luz",t:"Si se corta la luz, el filtro se para. Al volver, revisá que arranque. Si fue largo, hacé un cambio parcial de agua."},
+ {s:["invierno","otoño"],sp:"pez",h:"Calefactor al día",t:"Los peces tropicales necesitan entre 24 y 28 °C. Revisá que el calefactor ande y que el agua nueva esté a la misma temperatura."},
+ {s:["primavera"],sp:"pez",h:"Más luz, más algas",t:"Con días más largos aparecen algas. Mantené la luz de la pecera en 8 a 10 horas y no sobrealimentes."},
+ {s:["todo"],sp:"pez",h:"Menos comida, agua más limpia",t:"Lo que no comen en 2 minutos se pudre y ensucia el agua. Es la causa número uno de problemas en la pecera."},
+ {s:["todo"],sp:"pez",h:"Siempre con anticloro",t:"El agua de la canilla tiene cloro. Cada vez que agregues agua nueva, usá acondicionador."},
+ {s:["todo"],sp:"pez",h:"El filtro no se lava en la canilla",t:"Enjuagalo con agua sacada de la pecera: así no matás las bacterias que mantienen el agua sana."},
+ {s:["todo"],sp:"pez",h:"Si te vas de vacaciones",t:"Un pez adulto aguanta unos días sin comer. Los bloques de comida para vacaciones suelen ensuciar el agua: mejor que alguien les dé un poquito."}
 ];
 let tipOff=0;
 function season(){ const m=new Date().getMonth()+1; return m===12||m<=2?"verano":m<=5?"otoño":m<=8?"invierno":"primavera"; }
 function renderTip(){
-  const se=season(), sp=S.sp, pool=TIPS.filter(t=>(t.sp==="ambos"||t.sp===sp)&&(t.s.includes(se)||t.s.includes("todo")));
+  const se=season(), sp=S.sp, pool=TIPS.filter(t=>(sp==="pez"?t.sp==="pez":(t.sp==="ambos"||t.sp===sp))&&(t.s.includes(se)||t.s.includes("todo")));
   const seas=pool.filter(t=>!t.s.includes("todo")), gen=pool.filter(t=>t.s.includes("todo"));
   const mix=[]; for(let i=0;i<Math.max(seas.length,gen.length);i++){ if(seas[i]) mix.push(seas[i]); if(i%2===1&&gen[(i-1)/2]) mix.push(gen[(i-1)/2]); } gen.forEach(g=>{ if(!mix.includes(g)) mix.push(g); });
   const day=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/864e5), t=mix[(day+tipOff)%mix.length], sel=SEL();
@@ -1119,7 +1257,7 @@ function setupFeedback(){
 }
 
 /* Cuidado compartido */
-const SHARED=["name","sp","sex","breed","w","age","neut","conds","oName","oNum","oTel","contacts","ctrl"];
+const SHARED=["tank","name","sp","sex","breed","w","age","neut","conds","oName","oNum","oTel","contacts","ctrl"];
 const fmtCode=c=>c?c.slice(0,5)+"-"+c.slice(5):"";
 function packPet(p){
   const pet={}; SHARED.forEach(k=>pet[k]=p[k]);
